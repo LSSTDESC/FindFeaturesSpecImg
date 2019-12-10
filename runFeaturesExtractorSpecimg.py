@@ -1,6 +1,6 @@
 
 from FeaturesExtractor import parameters
-from FeaturesExtractor import featuresextractor
+from FeaturesExtractor.featuresextractor import FeatureExtractor
 
 
 import os
@@ -11,9 +11,8 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
 
     parser = ArgumentParser()
-    parser.add_argument(dest="input", metavar='path', default=["T1M_20190215_225550_730_HD116405_Filtre_None_bin1x1.1_red.fit"],
-                        help="Input fits file name. It can be a list separated by spaces, or it can use * as wildcard.",
-                        nargs='*')
+    parser.add_argument(dest="input", metavar='path', default=["tests/data/T1M_20190215_225550_730_HD116405_Filtre_None_bin1x1.1_red.fit"],
+                        help="Input fits file name. It can be a list separated by spaces, or it can use * as wildcard.",nargs='*')
     parser.add_argument("-d", "--debug", dest="debug", action="store_true",
                         help="Enter debug mode (more verbose and plots).", default=False)
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true",
@@ -30,8 +29,10 @@ if __name__ == "__main__":
         parameters.DEBUG = True
         parameters.VERBOSE = True
 
-    file_names = args.input
+    file_name = args.input[0]
     config_name = args.config
+    output_directory=args.output_directory
 
+    FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini')
 
 

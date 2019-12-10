@@ -7,7 +7,8 @@ import coloredlogs
 import logging
 import astropy.units as units
 
-import parameters
+
+from FeaturesExtractor import parameters
 
 logging.getLogger("matplotlib").setLevel(logging.ERROR)
 
