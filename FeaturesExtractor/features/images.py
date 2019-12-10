@@ -38,11 +38,11 @@ class Image(object):
         self.file_name = file_name
 
         # container for image processed of not
-        self.header         = None
-        self.img            = None
-        self.theta          = None
-        self.lambda_plus    = None
-        self.lambda_minus   = None
+        self.header            = None
+        self.img               = None
+        self.theta             = None
+        self.lambda_plus       = None
+        self.lambda_minus      = None
 
         # container for clipped images
         self.img_clip          = None
@@ -119,12 +119,21 @@ class Image(object):
             data = np.copy(self.lambda_minus)
         elif img_type=="theta":
             data = np.copy(self.theta)
+        elif img_type=="img_cut":
+            data = np.copy(self.img_clip)
+        elif img_type=="lambda_p_cut":
+            data = np.copy(self.lambda_plus_clip)
+        elif img_type=="lambda_m_cut":
+            data = np.copy(self.lambda_minus_clip)
+        elif img_type=="theta_cut":
+            data = np.copy(self.theta_clip)
 
-        if img_type=="theta":
+        if img_type=="theta" or img_type=="theta_cut":
             plot_image_simple(ax, data=data, scale="lin", title=title, units=units, cax=cax,aspect=aspect, vmin=vmin, vmax=vmax, cmap=cmap)
         else:
             plot_image_simple(ax, data=data, scale=scale, title=title, units=units, cax=cax, aspect=aspect, vmin=vmin,
                               vmax=vmax, cmap=cmap)
+
 
 
         plt.legend()
@@ -133,7 +142,6 @@ class Image(object):
 
 
     #--------------------------------------------------------------------------------------------
-
     def process_image(self):
         """
 
@@ -144,5 +152,14 @@ class Image(object):
         self.my_logger.info(f'\n\tImage processed')
 
     # --------------------------------------------------------------------------------------------
+    def clip_images(self):
+        """
 
+        :return:
+        """
+        self.img_clip          =  clip_array(self.img,parameters.CLIP_MIN,parameters.CLIP_MAX)
+        self.theta_clip        =  clip_array(self.theta,parameters.CLIP_MIN,parameters.CLIP_MAX)
+        self.lambda_plus_clip  =  clip_array(self.lambda_plus,parameters.CLIP_MIN,parameters.CLIP_MAX)
+        self.lambda_minus_clip =  clip_array(self.lambda_minus,parameters.CLIP_MIN,parameters.CLIP_MAX)
 
+        self.my_logger.info(f'\n\tImages clipped')

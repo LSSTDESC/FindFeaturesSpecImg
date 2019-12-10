@@ -11,7 +11,9 @@ import matplotlib as mpl
 # Paths
 mypath = os.path.dirname(__file__)
 
-
+# Quantile to clip the image
+CLIP_MIN = 0.001
+CLIP_MAX = 0.999
 
 # Plotting
 PAPER = False

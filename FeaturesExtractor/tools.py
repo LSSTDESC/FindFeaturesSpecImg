@@ -9,7 +9,14 @@ from astropy.io import fits
 import matplotlib.pyplot as plt
 import matplotlib.colors
 from matplotlib.ticker import MaxNLocator
+import matplotlib.cm as cmx
 
+import astropy
+from astropy.visualization.mpl_normalize import (ImageNormalize,MinMaxInterval,PercentileInterval,SqrtStretch,LogStretch)
+from astropy.visualization.wcsaxes import SphericalCircle
+
+import time
+from datetime import date
 
 #-------------------------------------------------------------------------------------
 def ensure_dir(directory_name):
@@ -33,6 +40,12 @@ def ensure_dir(directory_name):
     if not os.path.exists(directory_name):
         os.makedirs(directory_name)
 #-------------------------------------------------------------------------------------
+
+def clip_array(in_array,themin,themax):
+    amin = np.quantile(in_array, themin)
+    amax = np.quantile(in_array, themax)
+    out_array = np.clip(in_array, amin, amax)
+    return out_array
 
 
 #-------------------------------------------------------------------------------------

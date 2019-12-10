@@ -38,6 +38,7 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
     if parameters.DEBUG:
         image.plot_image(scale='log',title="Original image")
 
+    #-------
     image.process_image()
 
     if parameters.DEBUG:
@@ -48,6 +49,24 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
 
     if parameters.DEBUG:
         image.plot_image(img_type="theta", scale='log', title="theta")
+
+    # -------
+    image.clip_images()
+
+    if parameters.DEBUG:
+        image.plot_image(img_type="img_cut",scale='log',title="image cut")
+
+    if parameters.DEBUG:
+        image.plot_image(img_type="lambda_p_cut",scale='log',title="lambda_plus cut")
+
+    if parameters.DEBUG:
+        image.plot_image(img_type="lambda_m_cut", scale='log', title="lambda_minus cut")
+
+    if parameters.DEBUG:
+        image.plot_image(img_type="theta_cut", scale='log', title="theta cut")
+
+
+
 
     # Set output path
     ensure_dir(output_directory)

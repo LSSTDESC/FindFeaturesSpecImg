@@ -13,7 +13,7 @@ from FeaturesExtractor import parameters
 logging.getLogger("matplotlib").setLevel(logging.ERROR)
 
 
-
+#---------------------------------------------------------------------------------------------
 def load_config(config_filename):
     if not os.path.isfile(config_filename):
         sys.exit('Config file %s does not exist.' % config_filename)
@@ -53,7 +53,7 @@ def load_config(config_filename):
                 print(f"x {options}: {value}\t => parameters.{options.upper()}: {par}\t {type(par)}")
 
 
-
+#---------------------------------------------------------------------------------------------
 
 def set_logger(logger):
     """Logger function for all classes.
