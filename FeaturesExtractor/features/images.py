@@ -8,6 +8,8 @@ from FeaturesExtractor import parameters
 
 import matplotlib.pyplot as plt
 
+from skimage import feature
+
 #----------------------------------------------------------------------------------------------------------------------
 class Image(object):
 
@@ -127,19 +129,48 @@ class Image(object):
             data = np.copy(self.lambda_minus_clip)
         elif img_type=="theta_cut":
             data = np.copy(self.theta_clip)
+        elif img_type == "lambda_p_edge":
+            data = np.copy(self.lambda_plus_edges)
+        elif img_type == "lambda_m_edge":
+            data = np.copy(self.lambda_minus_edges)
 
-        if img_type=="theta" or img_type=="theta_cut":
-            plot_image_simple(ax, data=data, scale="lin", title=title, units=units, cax=cax,aspect=aspect, vmin=vmin, vmax=vmax, cmap=cmap)
-        else:
-            plot_image_simple(ax, data=data, scale=scale, title=title, units=units, cax=cax, aspect=aspect, vmin=vmin,
+        #if img_type=="theta" or img_type=="theta_cut" or img_type=="lambda_p_edge" or img_type=="lambda_m_edge":
+        #    plot_image_simple(ax, data=data, scale="lin", title=title, units=units, cax=cax,aspect=aspect, vmin=vmin, vmax=vmax, cmap=cmap)
+        #else:
+        plot_image_simple(ax, data=data, scale=scale, title=title, units=units, cax=cax, aspect=aspect, vmin=vmin,
                               vmax=vmax, cmap=cmap)
-
-
 
         plt.legend()
         if parameters.DISPLAY:
             plt.show()
 
+    def plot_edges(self):
+        """
+
+        :return:
+        """
+
+        # display results
+        fig, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3, figsize=(20, 6), sharex=True, sharey=True)
+
+        norm = ImageNormalize(self.img, interval=PercentileInterval(98), stretch=LogStretch())
+
+        ax1.imshow(self.img, origin="lower", norm=norm, cmap=plt.cm.gray)
+        # ax1.axis('off')
+        ax1.set_title('original image', fontsize=14)
+
+        ax2.imshow(self.lambda_plus_edges, origin="lower", cmap=plt.cm.gray)
+        # ax2.axis('off')
+        ax2.set_title('Canny filter on lambda_plus, $\sigma=${}'.format(parameters.SIGMA_EDGE), fontsize=14)
+
+        ax3.imshow(self.lambda_minus_edges, origin="lower", cmap=plt.cm.gray)
+        # ax3.axis('off')
+        ax3.set_title('Canny filter on lambda_minus, $\sigma=${}'.format(parameters.SIGMA_EDGE), fontsize=14)
+
+        # fig.tight_layout()
+        plt.suptitle("image, lambda_plus edges , lambda_minus edges",fontsize=18)
+
+        plt.show()
 
     #--------------------------------------------------------------------------------------------
     def process_image(self):
@@ -163,3 +194,15 @@ class Image(object):
         self.lambda_minus_clip =  clip_array(self.lambda_minus,parameters.CLIP_MIN,parameters.CLIP_MAX)
 
         self.my_logger.info(f'\n\tImages clipped')
+
+    #------------------------------------------------------------------------------------------
+    def compute_edges(self):
+        """
+
+        :return:
+        """
+
+        self.lambda_minus_edges = feature.canny(self.lambda_minus_clip, sigma=parameters.SIGMA_EDGE)
+        self.lambda_plus_edges = feature.canny(self.lambda_plus_clip, sigma=parameters.SIGMA_EDGE)
+
+        self.my_logger.info(f'\n\tImages edges computed')

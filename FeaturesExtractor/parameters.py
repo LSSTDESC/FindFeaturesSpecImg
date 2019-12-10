@@ -15,6 +15,10 @@ mypath = os.path.dirname(__file__)
 CLIP_MIN = 0.001
 CLIP_MAX = 0.999
 
+# Sigma for edge detection
+SIGMA_EDGE = 5
+
+
 # Plotting
 PAPER = False
 LINEWIDTH = 2
