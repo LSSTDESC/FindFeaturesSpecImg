@@ -46,6 +46,9 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
     if parameters.DEBUG:
         image.plot_image(img_type="lambda_m", scale='log', title="lambda_minus")
 
+    if parameters.DEBUG:
+        image.plot_image(img_type="theta", scale='log', title="theta")
+
     # Set output path
     ensure_dir(output_directory)
 

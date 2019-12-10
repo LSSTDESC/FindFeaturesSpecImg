@@ -120,8 +120,13 @@ class Image(object):
         elif img_type=="theta":
             data = np.copy(self.theta)
 
+        if img_type=="theta":
+            plot_image_simple(ax, data=data, scale="lin", title=title, units=units, cax=cax,aspect=aspect, vmin=vmin, vmax=vmax, cmap=cmap)
+        else:
+            plot_image_simple(ax, data=data, scale=scale, title=title, units=units, cax=cax, aspect=aspect, vmin=vmin,
+                              vmax=vmax, cmap=cmap)
 
-        plot_image_simple(ax, data=data, scale=scale, title=title, units=units, cax=cax,aspect=aspect, vmin=vmin, vmax=vmax, cmap=cmap)
+
         plt.legend()
         if parameters.DISPLAY:
             plt.show()
