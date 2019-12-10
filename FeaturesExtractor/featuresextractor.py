@@ -1,5 +1,4 @@
-def Spectractor(file_name, output_directory, guess, target, disperser_label="", config='./config/ctio.ini',
-                atmospheric_lines=True, line_detection=True,logbook=None):
+def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini'):
     """ Spectractor
     Main function to extract a spectrum from an image
 
@@ -9,40 +8,14 @@ def Spectractor(file_name, output_directory, guess, target, disperser_label="", 
         Input file nam of the image to analyse
     output_directory: str
         Output directory
-    guess: [int,int]
-        [x0,y0] list of the guessed pixel positions of the target in the image (must be integers)
-    target: str
-        The name of the targeted object
-    disperser_label: str
-        The name of the disperser
-    config: str
-        The config file name
-    atmospheric_lines: bool
-        If True atmospheric lines are used in the calibration fit
-    line_detection: bool
-        If True the absorption or emission lines are
-            used to calibrate the pixel to wavelength relationship
 
     Returns
     -------
-    spectrum: Spectrum
-        The extracted spectrum object
+
 
     Examples
     --------
-    Extract the spectrogram and its characteristics from the image:
-    >>> import os
-    >>> from spectractor.logbook import LogBook
-    >>> logbook = LogBook(logbook='./ctiofulllogbook_jun2017_v5.csv')
-    >>> file_names = ['./tests/data/reduc_20170605_028.fits']
-    >>> for file_name in file_names:
-    ...     tag = file_name.split('/')[-1]
-    ...     disperser_label, target, xpos, ypos = logbook.search_for_image(tag)
-    ...     if target is None or xpos is None or ypos is None:
-    ...         continue
-    ...     spectrum = Spectractor(file_name, './tests/data/', [xpos, ypos], target, disperser_label, './config/ctio.ini')
-    ...     assert spectrum is not None
-    ...     assert os.path.isfile('tests/data/reduc_20170605_028_spectrum.fits')
+
     """
 
     my_logger = set_logger(__name__)

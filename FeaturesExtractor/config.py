@@ -7,7 +7,7 @@ import coloredlogs
 import logging
 import astropy.units as units
 
-
+import parameters
 
 logging.getLogger("matplotlib").setLevel(logging.ERROR)
 
@@ -41,16 +41,7 @@ def load_config(config_filename):
     parameters.MY_FORMAT = "%(asctime)-20s %(name)-10s %(funcName)-20s %(levelname)-6s %(message)s"
     logging.basicConfig(format=parameters.MY_FORMAT, level=logging.WARNING)
     mypath = os.path.dirname(__file__)
-    parameters.HOLO_DIR = os.path.join(mypath, parameters.HOLO_DIR)
-    parameters.THROUGHPUT_DIR = os.path.join(mypath, parameters.THROUGHPUT_DIR)
-    parameters.CCD_ARCSEC2RADIANS = np.pi / (180. * 3600.)  # conversion factor from arcsec to radians
-    parameters.OBS_DIAMETER = parameters.OBS_DIAMETER * units.m  # Diameter of the telescope
-    parameters.OBS_SURFACE = np.pi * parameters.OBS_DIAMETER ** 2 / 4.  # Surface of telescope
-    parameters.LAMBDAS = np.arange(parameters.LAMBDA_MIN, parameters.LAMBDA_MAX, 1)
-    parameters.FLAM_TO_ADURATE = ((parameters.OBS_SURFACE * parameters.SED_UNIT * parameters.TIME_UNIT
-                                   * parameters.wl_dwl_unit / parameters.hc / parameters.CCD_GAIN
-                                   * parameters.g_disperser_ronchi).decompose()).value
-    parameters.CALIB_BGD_NPARAMS = parameters.CALIB_BGD_ORDER + 1
+    # may overwrite parameters
 
     if parameters.VERBOSE:
         for section in config.sections():
