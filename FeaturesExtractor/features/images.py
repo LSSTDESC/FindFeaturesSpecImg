@@ -116,3 +116,19 @@ class Image(object):
         plt.legend()
         if parameters.DISPLAY:
             plt.show()
+
+
+    #--------------------------------------------------------------------------------------------
+
+    def process_image(self):
+        """
+
+        :return:
+        """
+        self.lambda_plus, self.lambda_minus, self.theta=hessian_and_theta(self.img)
+
+        self.my_logger.info(f'\n\tImage processed')
+        
+    # --------------------------------------------------------------------------------------------
+
+
