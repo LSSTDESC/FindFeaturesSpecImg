@@ -73,7 +73,7 @@ class Image(object):
 
 
     # -----------------------------------------------
-    def plot_image(self, ax=None, scale="lin", title="", units="Image units", plot_stats=False,
+    def plot_image(self, img_type="img",ax=None, scale="lin", title="", units="Image units", plot_stats=False,
                    figsize=[9.3, 8], aspect=None, vmin=None, vmax=None,
                    cmap="jet", cax=None):
         """Plot image.
@@ -110,7 +110,16 @@ class Image(object):
         if ax is None:
             plt.figure(figsize=figsize)
             ax = plt.gca()
-        data = np.copy(self.img)
+
+        if img_type=="img":
+            data = np.copy(self.img)
+        elif img_type=="lambda_p":
+            data = np.copy(self.lambda_plus)
+        elif img_type=="lambda_m":
+            data = np.copy(self.lambda_minus)
+        elif img_type=="theta":
+            data = np.copy(self.theta)
+
 
         plot_image_simple(ax, data=data, scale=scale, title=title, units=units, cax=cax,aspect=aspect, vmin=vmin, vmax=vmax, cmap=cmap)
         plt.legend()
@@ -128,7 +137,7 @@ class Image(object):
         self.lambda_plus, self.lambda_minus, self.theta=hessian_and_theta(self.img)
 
         self.my_logger.info(f'\n\tImage processed')
-        
+
     # --------------------------------------------------------------------------------------------
 
 
