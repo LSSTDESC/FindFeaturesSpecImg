@@ -38,10 +38,15 @@ class FeatureLine(object):
         dx=self.x2 - self.x1
         dy = self.y2 - self.y1
 
-        self.angle       = 0
+        self.angle          = 0           # angle of segment in degree
+
+        self.flag           = False       # this segment will be validated if it is in a validated circle
+        self.nbcircles      = 0
+        self.nbpixincircles = 0
 
         if dx!= 0:
-            self.angle       = np.arctan(dy/dx)*180./np.pi
+            self.angle         = np.arctan(dy/dx)*180./np.pi
+
 
 
 
@@ -268,7 +273,7 @@ class FeatureImage(object):
 
     def compute_signal_in_circles(self,img):
         """
-        FeatureImage::ompute_signal_in_circles(img)
+        FeatureImage::compute_signal_in_circles(img)
 
         :param img:  Compute the sum in the image
         :return:
@@ -301,6 +306,10 @@ class FeatureImage(object):
     # --------------------------------------------------------------------------
     def compute_line_in_circles(self):
         """
+        FeatureImage::compute_line_in_circles(self)
+
+        Compute the number of lines and pixels in the circles
+
         :return:
         """
 
@@ -321,7 +330,7 @@ class FeatureImage(object):
                 pol = np.poly1d(Z)
                 Y   = pol(X)
                 theindexes=np.where( (X-circle.x0)**2+(Y-circle.y0)**2 <circle.r0**2)[0]
-                if len(theindexes):
+                if len(theindexes)>0:
                     NumberOfCrossings+=1
                     NumberOfPixels+=len(theindexes)
 
@@ -334,6 +343,9 @@ class FeatureImage(object):
     # --------------------------------------------------------------------------
     def flag_validate_circles(self):
         """
+        FeatureImage::flag_validate_circles()
+
+        Function to validate a circle if it is crossed by enough segments-pixels and has enough signal in it
 
         :return:
         """
@@ -357,5 +369,38 @@ class FeatureImage(object):
             self.flag_validated_circles[erase_index] = False
 
         print("flag_plot_circle = ", self.flag_validated_circles)
+    #----------------------------------------------------------------------------------
+    def flag_validate_lines(self):
+        """
+        FeatureImage::flag_validate_lines(self)
+
+        Function to validate if a segment is associated to a validated circle.
+        (Will allow to caculate the angle theta)
+
+        :return:
+        """
+        index = 0
+        X = np.arange(0, self.Nx)
+
+        # loop on circles
+        for circle in self.circles:
+            # if the validation of circles has proceed
+            if len(self.flag_validated_circles) > 0:
+                if self.flag_validated_circles[index]:
+                    # loop on lines
+                    for line in self.lines:
+                        # make a straight lines
+                        Z = np.polyfit([line.x1, line.x2], [line.y1, line.y2], 1)
+                        pol = np.poly1d(Z)
+                        Y = pol(X)
+                        theindexes = np.where((X - circle.x0) ** 2 + (Y - circle.y0) ** 2 < circle.r0 ** 2)[0]
+                        if len(theindexes)>0:
+                            line.flag=True
+                            line.nbcircles += 1
+                            line.nbpixincircles += len(theindexes)
+
+
+
+
 
 

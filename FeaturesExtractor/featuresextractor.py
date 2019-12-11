@@ -107,6 +107,9 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
     # Validate circles to be used
     image_features_lambdaplus.flag_validate_circles()
 
+    # Validate line segments
+    image_features_lambdaplus.flag_validate_lines()
+
     image_features_lambdaplus.plot_circles(image.img_cube[parameters.IndexImg.img], scale="log", cmap=plt.cm.gray,
                                            title="Hough circles detected-validated in lambda_plus edges")
 
@@ -137,6 +140,8 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
 
     # Validate circles to be used
     image_features_lambdaminus.flag_validate_circles()
+    # Validate line segments
+    image_features_lambdaminus.flag_validate_lines()
 
     # plot
     image_features_lambdaminus.plot_circles(image.img_cube[parameters.IndexImg.img], scale="log", cmap=plt.cm.gray,
