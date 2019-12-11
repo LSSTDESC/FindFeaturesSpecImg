@@ -31,6 +31,19 @@ class IndexImg(IntEnum):
 # number of images
 NBIMG                  = 10
 
+# plag to select which image to plot
+FLAG_PLOT_IMG                 = True
+FLAG_PLOT_LAMBDA_PLUS         = False
+FLAG_PLOT_LAMBDA_MINUS        = False
+FLAG_PLOT_LAMBDA_THETA        = False
+FLAG_PLOT_IMG_CLIP            = False
+FLAG_PLOT_LAMBDA_PLUS_CLIP    = False
+FLAG_PLOT_LAMBDA_MINUS_CLIP   = False
+FLAG_PLOT_THETA_CLIP          = False
+FLAG_PLOT_LAMBDA_PLUS_EDGES   = True
+FLAG_PLOT_LAMBDA_MINUS_EDGES  = True
+
+
 
 #-----------------------------------------------------------------------
 # Quantile to clip the image
@@ -39,9 +52,28 @@ CLIP_MIN = 0.001
 CLIP_MAX = 0.999
 
 #------------------------------------------------------------------------
-# Sigma for edge detection
+# Sigma for Canny edge detection
 #------------------------------------------------------------------------
 SIGMA_EDGE = 5
+FLAG_PLOT_CANNYEDGES    = True
+
+#------------------------------------------------------------------------
+# Probability Hough Line Detection
+#------------------------------------------------------------------------
+LINE_THRESHOLD          = 10
+LINE_LENGTH             = 20
+LINE_GAP                =  5
+
+#------------------------------------------------------------------------
+# Hough Circle Detection
+#------------------------------------------------------------------------
+# Detect two radii
+HOUGH_RADIUS_MIN        = 20
+HOUGH_RADIUS_MAX        = 100
+HOUGH_RADIUS_STEP       =  2
+
+# number of circles
+NB_HOUGH_CIRCLE_PEAKS   = 10
 
 
 # Plotting
