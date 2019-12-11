@@ -384,12 +384,13 @@ class FeatureImage(object):
 
         print("flag_plot_circle = ", self.flag_validated_circles)
 
-        index=0
+
         for index in np.arange(len(self.flag_validated_circles)):
-            x0=self.circles[index].x0
-            y0 = self.circles[index].y0
-            r0 = self.circles[index].r0
-            print("{} :: ({},{}) {}".format(index,x0,y0,r0))
+            if self.flag_validated_circles[index]:
+                x0=self.circles[index].x0
+                y0 = self.circles[index].y0
+                r0 = self.circles[index].r0
+                print(" validated circle {} :: ({},{}) {}".format(index,x0,y0,r0))
 
     #----------------------------------------------------------------------------------
     def flag_validate_lines(self):
@@ -454,6 +455,7 @@ class FeatureImage(object):
                     x0=circle.x0
                     r0=circle.r0
 
+                    print(" validated circle {} :: ({},{}) {}".format(index, x0, y0, r0))
 
                     bandX = self.img[int(y0 - n2 * r0):int(y0 + n2 * r0), int(x0 - n2 * r0):int(x0 + n2 * r0)]
                     bandY = self.img[int(y0 - n2 * r0):int(y0 + n2 * r0), int(x0 - n2 * r0):int(x0 + n2 * r0)]
@@ -465,7 +467,18 @@ class FeatureImage(object):
                     yy = np.arange(int(y0 - n2 * r0), int(y0 + n2 * r0))
 
 
+
+                    fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
+                    ax1.imshow(bandX,origin='lower',cmap="gray")
+                    ax2.imshow(bandY, origin='lower', cmap="gray")
+                    plt.show()
+
+
+
                     title="circle (x0,y0) = ({},{}) , r0 = {}".format(x0,y0,r0)
+
+
+
                     fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
 
                     ax1.plot(xx,profX,"r-")
