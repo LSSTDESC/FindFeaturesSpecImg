@@ -114,7 +114,7 @@ class FeatureImage(object):
         FeatureImage::find_lines()
         :return:
         """
-
+        self.my_logger.info(f'\n\t probabilistic Hough Line search')
 
         all_lines = probabilistic_hough_line(self.img, threshold=parameters.LINE_THRESHOLD, line_length=parameters.LINE_LENGTH,
                                                 line_gap=parameters.LINE_GAP)
@@ -160,6 +160,8 @@ class FeatureImage(object):
         :return:
         """
 
+        self.my_logger.info(f'\n\t plot lines')
+
         #if img==None:
         if isinstance(img, np.ndarray):
             data=img
@@ -196,6 +198,10 @@ class FeatureImage(object):
 
         :return:
         """
+
+        self.my_logger.info(f'\n\t Hough circles search')
+
+
         hough_radii = np.arange(parameters.HOUGH_RADIUS_MIN,parameters.HOUGH_RADIUS_MAX,parameters.HOUGH_RADIUS_STEP)
 
         hough_res= hough_circle(self.img, hough_radii)
@@ -235,6 +241,8 @@ class FeatureImage(object):
             :param cax:
             :return:
             """
+
+        self.my_logger.info(f'\n\t plot circles ')
 
         # if img==None:
         if isinstance(img, np.ndarray):
@@ -279,6 +287,8 @@ class FeatureImage(object):
         :return:
         """
 
+        self.my_logger.info(f'\n\t compute signal in circles')
+
         X = np.arange(0, img.shape[1])
         Y = np.arange(0, img.shape[0])
 
@@ -312,6 +322,8 @@ class FeatureImage(object):
 
         :return:
         """
+
+        self.my_logger.info(f'\n\t compute line in circles ')
 
         X = np.arange(0, self.Nx)
 
@@ -350,6 +362,8 @@ class FeatureImage(object):
         :return:
         """
 
+        self.my_logger.info(f'\n\t flag_validate circles')
+
         # reset
         self.flag_validated_circles = np.array([], dtype=bool)
 
@@ -369,6 +383,14 @@ class FeatureImage(object):
             self.flag_validated_circles[erase_index] = False
 
         print("flag_plot_circle = ", self.flag_validated_circles)
+
+        index=0
+        for index in np.arange(len(self.flag_validated_circles)):
+            x0=self.circles[index].x0
+            y0 = self.circles[index].y0
+            r0 = self.circles[index].r0
+            print("{} :: ({},{}) {}".format(index,x0,y0,r0))
+
     #----------------------------------------------------------------------------------
     def flag_validate_lines(self):
         """
@@ -379,6 +401,11 @@ class FeatureImage(object):
 
         :return:
         """
+
+        self.my_logger.info(f'\n\t flag validate lines')
+
+        print("self.flag_validated_circles = ", self.flag_validated_circles)
+
         index = 0
         X = np.arange(0, self.Nx)
 
@@ -398,8 +425,62 @@ class FeatureImage(object):
                             line.flag=True
                             line.nbcircles += 1
                             line.nbpixincircles += len(theindexes)
+    #------------------------------------------------------------------------------------
+    def plot_circles_profiles(self):
+        """
+
+        FeatureImage::plot_circles_profiles(self
+
+        :return:
+        """
+
+        self.my_logger.info(f'\n\t plot circles profiles')
 
 
+        n1 = 3.0
+        n2 = 2.0
+        n3 = 1.0
+        n4 = 4.0
+
+        print("self.flag_validated_circles = ",self.flag_validated_circles)
+
+        index=0
+        # loop on circles
+        for circle in self.circles:
+            # if the validation of circles has proceed
+            if len(self.flag_validated_circles) > 0:
+                if self.flag_validated_circles[index]:
+                    y0=circle.y0
+                    x0=circle.x0
+                    r0=circle.r0
+
+
+                    bandX = self.img[int(y0 - n2 * r0):int(y0 + n2 * r0), int(x0 - n2 * r0):int(x0 + n2 * r0)]
+                    bandY = self.img[int(y0 - n2 * r0):int(y0 + n2 * r0), int(x0 - n2 * r0):int(x0 + n2 * r0)]
+
+                    profX = np.sum(bandX, axis=0)
+                    profY = np.sum(bandY, axis=1)
+
+                    xx = np.arange(int(x0 - n2 * r0), int(x0 + n2 * r0))
+                    yy = np.arange(int(y0 - n2 * r0), int(y0 + n2 * r0))
+
+
+                    title="circle (x0,y0) = ({},{}) , r0 = {}".format(x0,y0,r0)
+                    fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
+
+                    ax1.plot(xx,profX,"r-")
+                    ax1.grid()
+                    ax1.set_xlabel("X")
+                    ax1.set_title("X")
+
+                    ax2.plot(yy, profY, "r-")
+                    ax2.grid()
+                    ax2.set_xlabel("Y")
+                    ax2.set_title("Y")
+
+                    plt.suptitle(title)
+                    plt.show()
+            index+=1
 
 
 

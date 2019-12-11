@@ -132,11 +132,10 @@ def plot_image_simple(ax, data, scale="lin", title="", units="Image units", cmap
 
     """
     if scale == "log" or scale == "log10":
-        norm = ImageNormalize(data, interval=PercentileInterval(100), stretch=LogStretch())
+        norm = ImageNormalize(data, interval=PercentileInterval(98), stretch=LogStretch())
         im = ax.imshow(data, origin='lower', cmap=cmap, norm=norm, aspect=aspect)
     else:
-        norm = ImageNormalize(data, interval=PercentileInterval(100))
-        im = ax.imshow(data, origin='lower', cmap=cmap, norm=norm, aspect=aspect)
+        im = ax.imshow(data, origin='lower', cmap=cmap, aspect=aspect)
 
     #im = ax.imshow(data, origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, aspect=aspect)
     ax.grid(color='silver', ls='solid')
@@ -144,9 +143,9 @@ def plot_image_simple(ax, data, scale="lin", title="", units="Image units", cmap
     ax.set_xlabel('X [pixels]')
     ax.set_ylabel('Y [pixels]')
     cb = plt.colorbar(im, ax=ax, cax=cax)
-    cb.formatter.set_powerlimits((0, 0))
-    cb.locator = MaxNLocator(7, prune=None)
-    cb.update_ticks()
+    #cb.formatter.set_powerlimits((0, 0))
+    #cb.locator = MaxNLocator(7, prune=None)
+    #cb.update_ticks()
     cb.set_label('%s (%s scale)' % (units, scale))  # ,fontsize=16)
     if title != "":
         ax.set_title(title)

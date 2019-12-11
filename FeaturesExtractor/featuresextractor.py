@@ -42,34 +42,34 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
 
 
     if parameters.DEBUG and parameters.FLAG_PLOT_IMG :
-        image.plot_image(scale='log',title="Original image")
+        image.plot_image(scale='log',title="Original image",cmap=plt.cm.gray)
 
     #-------
     image.process_image()
 
     if parameters.DEBUG and parameters.FLAG_PLOT_LAMBDA_PLUS:
-        image.plot_image(img_type="lambda_p",scale='log',title="lambda_plus")
+        image.plot_image(img_type="lambda_p",scale='log',title="lambda_plus",cmap=plt.cm.gray)
 
     if parameters.DEBUG and parameters.FLAG_PLOT_LAMBDA_MINUS:
-        image.plot_image(img_type="lambda_m", scale='log', title="lambda_minus")
+        image.plot_image(img_type="lambda_m", scale='log', title="lambda_minus",cmap=plt.cm.gray)
 
     if parameters.DEBUG and parameters.FLAG_PLOT_LAMBDA_THETA:
-        image.plot_image(img_type="theta", scale='lin', title="theta")
+        image.plot_image(img_type="theta", scale='lin', title="theta",cmap=plt.cm.gray)
 
     # -------
     image.clip_images()
 
     if parameters.DEBUG and parameters.FLAG_PLOT_IMG_CLIP:
-        image.plot_image(img_type="img_cut",scale='log',title="Clipped image cut")
+        image.plot_image(img_type="img_cut",scale='log',title="Clipped image cut",cmap=plt.cm.gray)
 
     if parameters.DEBUG and parameters.FLAG_PLOT_LAMBDA_PLUS_CLIP:
-        image.plot_image(img_type="lambda_p_cut",scale='log',title="Clipped lambda_plus")
+        image.plot_image(img_type="lambda_p_cut",scale='log',title="Clipped lambda_plus",cmap=plt.cm.gray)
 
     if parameters.DEBUG and parameters.FLAG_PLOT_LAMBDA_MINUS_CLIP:
-        image.plot_image(img_type="lambda_m_cut", scale='log', title="Clipped lambda_minus")
+        image.plot_image(img_type="lambda_m_cut", scale='log', title="Clipped lambda_minus",cmap=plt.cm.gray)
 
     if parameters.DEBUG and parameters.FLAG_PLOT_THETA_CLIP:
-        image.plot_image(img_type="theta_cut", scale='lin', title="Clipped theta")
+        image.plot_image(img_type="theta_cut", scale='lin', title="Clipped theta",cmap=plt.cm.gray)
 
     #-------------------------
     image.compute_edges()
@@ -84,7 +84,7 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
 
     # detect lines in lambda_plus
     image_features_lambdaplus.find_lines()
-    image_features_lambdaplus.plot_lines(image.img_cube[parameters.IndexImg.img],scale="log",cmap=plt.cm.gray,
+    image_features_lambdaplus.plot_lines(image.img_cube[parameters.IndexImg.lambda_plus],scale="log",cmap=plt.cm.gray,
                                          title="Hough Lines detected in lambda_plus edges")
 
     # detect circles
@@ -110,8 +110,17 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
     # Validate line segments
     image_features_lambdaplus.flag_validate_lines()
 
-    image_features_lambdaplus.plot_circles(image.img_cube[parameters.IndexImg.img], scale="log", cmap=plt.cm.gray,
+    image_features_lambdaplus.plot_circles(image.img_cube[parameters.IndexImg.lambda_plus], scale="log", cmap=plt.cm.gray,
                                            title="Hough circles detected-validated in lambda_plus edges")
+
+
+
+
+    # circle profile
+    image_features_lambdaplus.plot_circles_profiles()
+
+
+
 
     # ----------------------------
     # work on lambda_minus
@@ -119,7 +128,7 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
 
     # detect lines in lambda_plus
     image_features_lambdaminus.find_lines()
-    image_features_lambdaplus.plot_lines(image.img_cube[parameters.IndexImg.img], scale="log", cmap=plt.cm.gray,
+    image_features_lambdaplus.plot_lines(image.img_cube[parameters.IndexImg.lambda_minus], scale="log", cmap=plt.cm.gray,
                                          title="Hough Lines detected in lambda_minus edges")
 
     # detect circles
@@ -144,8 +153,14 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
     image_features_lambdaminus.flag_validate_lines()
 
     # plot
-    image_features_lambdaminus.plot_circles(image.img_cube[parameters.IndexImg.img], scale="log", cmap=plt.cm.gray,
+    image_features_lambdaminus.plot_circles(image.img_cube[parameters.IndexImg.lambda_minus], scale="log", cmap=plt.cm.gray,
                                            title="Hough circles detected-validated in lambda_minus edges")
+
+
+
+    # circle profile
+    image_features_lambdaplus.plot_circles_profiles()
+
 
     # Set output path
     ensure_dir(output_directory)

@@ -183,6 +183,9 @@ class Image(object):
 
         lambda_plus, lambda_minus, theta=hessian_and_theta(self.img_cube[parameters.IndexImg.img,:,:],margin_cut=1)
 
+        lambda_plus_cut = -np.where(lambda_plus < 0, lambda_plus, 0)
+
+
         Nx=lambda_plus.shape[0]
         Ny=lambda_plus.shape[1]
 
@@ -196,6 +199,9 @@ class Image(object):
 
         # copy the processed image in the cube
         self.img_cube[parameters.IndexImg.lambda_plus,Ypad:self.Ny - Ypad, Xpad:self.Nx - Xpad]     = lambda_plus
+        #self.img_cube[parameters.IndexImg.lambda_plus, Ypad:self.Ny - Ypad, Xpad:self.Nx - Xpad]    = lambda_plus_cut
+
+
         self.img_cube[parameters.IndexImg.lambda_minus,Ypad:self.Ny - Ypad, Xpad:self.Nx - Xpad]    = lambda_minus
         self.img_cube[parameters.IndexImg.theta,Ypad:self.Ny - Ypad, Xpad:self.Nx - Xpad]           = theta
 
