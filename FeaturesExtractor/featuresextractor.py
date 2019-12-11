@@ -54,16 +54,16 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
     image.clip_images()
 
     if parameters.DEBUG:
-        image.plot_image(img_type="img_cut",scale='log',title="image cut")
+        image.plot_image(img_type="img_cut",scale='log',title="Clipped image cut")
 
     if parameters.DEBUG:
-        image.plot_image(img_type="lambda_p_cut",scale='log',title="lambda_plus cut")
+        image.plot_image(img_type="lambda_p_cut",scale='log',title="Clipped lambda_plus")
 
     if parameters.DEBUG:
-        image.plot_image(img_type="lambda_m_cut", scale='log', title="lambda_minus cut")
+        image.plot_image(img_type="lambda_m_cut", scale='log', title="Clipped lambda_minus")
 
     if parameters.DEBUG:
-        image.plot_image(img_type="theta_cut", scale='lin', title="theta cut")
+        image.plot_image(img_type="theta_cut", scale='lin', title="Clipped theta")
 
     #-------------------------
     image.compute_edges()

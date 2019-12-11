@@ -132,14 +132,13 @@ def plot_image_simple(ax, data, scale="lin", title="", units="Image units", cmap
 
     """
     if scale == "log" or scale == "log10":
-        # removes the zeros and negative pixels first
-        zeros = np.where(data < 0.0001)
-        min_noz = np.min(data[np.where(data > 0)])
-        data[zeros] = min_noz
-        # apply log
-        data = np.log10(data)
+        norm = ImageNormalize(data, interval=PercentileInterval(100), stretch=LogStretch())
+        im = ax.imshow(data, origin='lower', cmap=cmap, norm=norm, aspect=aspect)
+    else:
+        norm = ImageNormalize(data, interval=PercentileInterval(100))
+        im = ax.imshow(data, origin='lower', cmap=cmap, norm=norm, aspect=aspect)
 
-    im = ax.imshow(data, origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, aspect=aspect)
+    #im = ax.imshow(data, origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, aspect=aspect)
     ax.grid(color='silver', ls='solid')
     ax.grid(True)
     ax.set_xlabel('X [pixels]')
