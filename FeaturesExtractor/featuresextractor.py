@@ -82,11 +82,38 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
     # work on lambda_plus
     image_features_lambdaplus=FeatureImage(image.img_cube[parameters.IndexImg.lambda_plus_edges])
 
-    # detect lines
+    # detect lines in lambda_plus
     image_features_lambdaplus.find_lines()
+    image_features_lambdaplus.plot_lines(image.img_cube[parameters.IndexImg.img],scale="log",cmap=plt.cm.gray,
+                                         title="Hough Lines detected in lambda_plus edges")
 
     # detect circles
     image_features_lambdaplus.find_circles()
+    image_features_lambdaplus.plot_circles(image.img_cube[parameters.IndexImg.img], scale="log",cmap=plt.cm.gray,
+                                         title="Hough circles detected in lambda_plus edges")
+
+    thesignalsum=image_features_lambdaplus.compute_signal_in_circles(image.img_cube[parameters.IndexImg.img])
+
+    print("SIGNALSUM=",thesignalsum)
+
+
+    # ----------------------------
+    # work on lambda_minus
+    image_features_lambdaminus = FeatureImage(image.img_cube[parameters.IndexImg.lambda_minus_edges])
+
+    # detect lines in lambda_plus
+    image_features_lambdaminus.find_lines()
+    image_features_lambdaplus.plot_lines(image.img_cube[parameters.IndexImg.img], scale="log", cmap=plt.cm.gray,
+                                         title="Hough Lines detected in lambda_minus edges")
+
+    # detect circles
+    image_features_lambdaminus.find_circles()
+    image_features_lambdaminus.plot_circles(image.img_cube[parameters.IndexImg.img], scale="log", cmap=plt.cm.gray,
+                                           title="Hough circles detected in lambda_minus edges")
+
+
+
+
 
 
     # Set output path

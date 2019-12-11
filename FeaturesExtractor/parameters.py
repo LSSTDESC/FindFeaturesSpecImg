@@ -60,15 +60,15 @@ FLAG_PLOT_CANNYEDGES    = True
 #------------------------------------------------------------------------
 # Probability Hough Line Detection
 #------------------------------------------------------------------------
-LINE_THRESHOLD          = 10
-LINE_LENGTH             = 20
-LINE_GAP                =  5
+LINE_THRESHOLD          = 50
+LINE_LENGTH             = 50
+LINE_GAP                = 10
 
 #------------------------------------------------------------------------
 # Hough Circle Detection
 #------------------------------------------------------------------------
 # Detect two radii
-HOUGH_RADIUS_MIN        = 20
+HOUGH_RADIUS_MIN        = 5
 HOUGH_RADIUS_MAX        = 100
 HOUGH_RADIUS_STEP       =  2
 
