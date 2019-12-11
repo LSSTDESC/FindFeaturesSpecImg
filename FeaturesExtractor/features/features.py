@@ -1,3 +1,4 @@
+from numpy.core._multiarray_umath import ndarray
 from skimage import feature
 from skimage.transform import hough_line, hough_line_peaks
 from skimage.transform import probabilistic_hough_line
@@ -98,6 +99,7 @@ class FeatureImage(object):
         self.signal         = np.array([], dtype=float)      # signal summed inside the circle
         self.numberoflines  = np.array([], dtype=int)        # number of segments crossing the circles
         self.numberofpoints = np.array([], dtype=int)        # number of points from extrapolated lines
+        self.flag_validated_circles = np.array([], dtype=bool)     # number of validated circle
 
         self.my_logger.info(f'\n\t Create FeatureImage')
 
@@ -242,27 +244,20 @@ class FeatureImage(object):
         plot_image_simple(ax, data=data, scale=scale, title=title, units=units, cax=cax, aspect=aspect, vmin=vmin,
                               vmax=vmax, cmap=cmap)
 
-        # by default plot every circles
-        flag_plot_circle = np.full(shape=len(self.circles),fill_value=True,dtype=np.bool)
 
-        if len(self.numberoflines )>0 and len(self.numberofpoints)>0  :
-            erase_index1= np.where(np.logical_or( self.numberofpoints==0, self.numberoflines==0))[0]
-            print("erase_index1 = ",erase_index1)
-            print("self.signal = ",self.signal )
-            erase_index2 = np.where(self.signal < parameters.HOUGH_SIGNAL_THRESHOLD)[0]
-            print("erase_index2 = ", erase_index2)
-            erase_index=np.union1d(erase_index1, erase_index2)
-            print("erase_index = ", erase_index)
-            flag_plot_circle[erase_index]=False
-
-        print("flag_plot_circle = ",flag_plot_circle)
 
         index=0
         for circle in self.circles:
-            if flag_plot_circle[index]:
+            # if the validation of circles has proceed
+            if len(self.flag_validated_circles)>0:
+                if self.flag_validated_circles[index]:
+                    thecircle = plt.Circle((circle.x0, circle.y0), circle.r0, color=linecolor, fill=False, lw=linewidth)
+                    ax.add_artist(thecircle)
+            # the validation of circles has not proceed
+            else:
                 thecircle = plt.Circle((circle.x0, circle.y0), circle.r0, color=linecolor, fill=False, lw=linewidth)
                 ax.add_artist(thecircle)
-            index+=1
+            index+=1  # increase at each new circle
 
         # plt.legend()
         if parameters.DISPLAY:
@@ -337,3 +332,30 @@ class FeatureImage(object):
         return self.numberoflines,self.numberofpoints
 
     # --------------------------------------------------------------------------
+    def flag_validate_circles(self):
+        """
+
+        :return:
+        """
+
+        # reset
+        self.flag_validated_circles = np.array([], dtype=bool)
+
+        # by default plot every circles
+        self.flag_validated_circles = np.full(shape=len(self.circles), fill_value=True, dtype=np.bool)
+
+
+
+        if len(self.numberoflines) > 0 and len(self.numberofpoints) > 0:
+            erase_index1 = np.where(np.logical_or(self.numberofpoints == 0, self.numberoflines == 0))[0]
+            print("erase_index1 = ", erase_index1)
+            print("self.signal = ", self.signal)
+            erase_index2 = np.where(self.signal < parameters.HOUGH_SIGNAL_THRESHOLD)[0]
+            print("erase_index2 = ", erase_index2)
+            erase_index = np.union1d(erase_index1, erase_index2)
+            print("erase_index = ", erase_index)
+            self.flag_validated_circles[erase_index] = False
+
+        print("flag_plot_circle = ", self.flag_validated_circles)
+
+
