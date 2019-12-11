@@ -75,6 +75,9 @@ HOUGH_RADIUS_STEP       =  2
 # number of circles
 NB_HOUGH_CIRCLE_PEAKS   = 10
 
+# erase circle having signal sum less than this threshold
+HOUGH_SIGNAL_THRESHOLD  = 0.01
+
 
 # Plotting
 PAPER = False

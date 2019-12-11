@@ -101,7 +101,7 @@ class FeatureImage(object):
 
         self.my_logger.info(f'\n\t Create FeatureImage')
 
-    # ---------------------------------------------------
+    # ---------------------------------------------------------------
     def find_lines(self):
         """
         FeatureImage::find_lines()
@@ -117,10 +117,15 @@ class FeatureImage(object):
         self.lines=[]
         for line_segment in all_lines:
             p0, p1 = line_segment
-            theline=FeatureLine(p0,p1,index)
-            #print(line_segment,"  l=" ,theline.length)
-            self.lines.append (theline)
-            index+=1
+
+            dx=p0[0]-p1[0]
+            dy = p0[1] - p1[1]
+
+            if dx!=0 and dy!=0 :
+                theline=FeatureLine(p0,p1,index)
+                #print(line_segment,"  l=" ,theline.length)
+                self.lines.append (theline)
+                index+=1
 
         nblines=len(self.lines)
 
@@ -128,7 +133,7 @@ class FeatureImage(object):
 
     #--------------------------------------
     def plot_lines(self,img=None, ax=None, scale="lin", title="", units="Image units", plot_stats=False,
-                   figsize=[8.3, 7], aspect=None, vmin=None, vmax=None,
+                   figsize=[7.5, 7], aspect=None, vmin=None, vmax=None,
                    cmap="jet", cax=None, linecolor="magenta",linewidth=0.5):
         """
         FeatureImage::plot_lines(img)
@@ -168,13 +173,14 @@ class FeatureImage(object):
 
 
 
+
         # plt.legend()
         if parameters.DISPLAY:
             plt.show()
 
 
 
-    #------------------------------------------------------
+    #-----------------------------------------------------------------
 
     def find_circles(self):
         """
@@ -201,9 +207,9 @@ class FeatureImage(object):
         nbcircles=len(self.circles)
         self.my_logger.info(f'\n\tNumber of Hough circles  {nbcircles} found')
 
-    # --------------------------------------
+    # ------------------------------------------------------------
     def plot_circles(self, img=None, ax=None, scale="lin", title="", units="Image units", plot_stats=False,
-                       figsize=[8.3, 7], aspect=None, vmin=None, vmax=None,
+                       figsize=[7.5, 7], aspect=None, vmin=None, vmax=None,
                        cmap="jet", cax=None, linecolor="magenta", linewidth=1):
         """
             FeatureImage::plot_lines(img)
@@ -236,15 +242,34 @@ class FeatureImage(object):
         plot_image_simple(ax, data=data, scale=scale, title=title, units=units, cax=cax, aspect=aspect, vmin=vmin,
                               vmax=vmax, cmap=cmap)
 
+        # by default plot every circles
+        flag_plot_circle = np.full(shape=len(self.circles),fill_value=True,dtype=np.bool)
 
+        if len(self.numberoflines )>0 and len(self.numberofpoints)>0  :
+            erase_index1= np.where(np.logical_or( self.numberofpoints==0, self.numberoflines==0))[0]
+            print("erase_index1 = ",erase_index1)
+            print("self.signal = ",self.signal )
+            erase_index2 = np.where(self.signal < parameters.HOUGH_SIGNAL_THRESHOLD)[0]
+            print("erase_index2 = ", erase_index2)
+            erase_index=np.union1d(erase_index1, erase_index2)
+            print("erase_index = ", erase_index)
+            flag_plot_circle[erase_index]=False
+
+        print("flag_plot_circle = ",flag_plot_circle)
+
+        index=0
         for circle in self.circles:
-            thecircle = plt.Circle((circle.x0, circle.y0), circle.r0, color=linecolor, fill=False, lw=linewidth)
-            ax.add_artist(thecircle)
+            if flag_plot_circle[index]:
+                thecircle = plt.Circle((circle.x0, circle.y0), circle.r0, color=linecolor, fill=False, lw=linewidth)
+                ax.add_artist(thecircle)
+            index+=1
 
         # plt.legend()
         if parameters.DISPLAY:
             plt.show()
 
+
+    #----------------------------------------------------------------
 
     def compute_signal_in_circles(self,img):
         """
@@ -259,6 +284,12 @@ class FeatureImage(object):
 
         XX, YY = np.meshgrid(X, Y)
 
+        self.signal = np.array([], dtype=float)
+
+        if len(self.circles)==0:
+            return self.signal
+
+        # loop in circles
         for circle in self.circles:
             r = (XX - circle.x0) ** 2 + (YY - circle.y0) ** 2
             signal_in_circle = np.where(r < 9 * circle.r0  ** 2, img, 0)
@@ -272,3 +303,37 @@ class FeatureImage(object):
 
         return self.signal
 
+    # --------------------------------------------------------------------------
+    def compute_line_in_circles(self):
+        """
+        :return:
+        """
+
+        X = np.arange(0, self.Nx)
+
+        self.numberoflines = np.array([], dtype=int)   # number of segments crossing the circles
+        self.numberofpoints = np.array([], dtype=int)  # number of points from extrapolated lines
+
+        # loop in circles
+        for circle in self.circles:
+            # loop on lines
+            NumberOfCrossings = 0
+            NumberOfPixels    = 0
+            # loop on lines
+            for line in self.lines:
+                # make a straight lines
+                Z   = np.polyfit([line.x1,line.x2], [line.y1,line.y2], 1)
+                pol = np.poly1d(Z)
+                Y   = pol(X)
+                theindexes=np.where( (X-circle.x0)**2+(Y-circle.y0)**2 <circle.r0**2)[0]
+                if len(theindexes):
+                    NumberOfCrossings+=1
+                    NumberOfPixels+=len(theindexes)
+
+            # compute circle by circles
+            self.numberoflines  =  np.append(self.numberoflines, NumberOfCrossings)
+            self.numberofpoints =  np.append(self.numberofpoints, NumberOfPixels)
+
+        return self.numberoflines,self.numberofpoints
+
+    # --------------------------------------------------------------------------
