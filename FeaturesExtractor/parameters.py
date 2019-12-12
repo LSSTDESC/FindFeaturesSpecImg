@@ -32,7 +32,7 @@ class IndexImg(IntEnum):
 NBIMG                  = 10
 
 # plag to select which image to plot
-FLAG_PLOT_IMG                 = True
+FLAG_PLOT_IMG                 = False
 FLAG_PLOT_LAMBDA_PLUS         = True
 FLAG_PLOT_LAMBDA_MINUS        = True
 FLAG_PLOT_LAMBDA_THETA        = False
@@ -68,7 +68,7 @@ LINE_GAP                = 5
 # Hough Circle Detection
 #------------------------------------------------------------------------
 # Detect two radii
-HOUGH_RADIUS_MIN        = 10
+HOUGH_RADIUS_MIN        = 5
 HOUGH_RADIUS_MAX        = 100
 HOUGH_RADIUS_STEP       =  2
 

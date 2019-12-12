@@ -98,13 +98,12 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
     # signal sum in circles
     thesignalsum=image_features_lambdaplus.compute_signal_in_circles(image.img_cube[parameters.IndexImg.img])
 
-    print("LAMBDA_PLUS::SIGNALSUM = ",thesignalsum)
+
 
     # circle crossing
-    NumberOfCrossings, NumberOfPixels = image_features_lambdaplus.compute_line_in_circles()
+    NumberOfCrossings, NumberOfPixels = image_features_lambdaplus.compute_line_in_circles(image.img_cube[parameters.IndexImg.lambda_plus])
 
-    print("LAMBDA_PLUS::NUMBEROFCROSSING = ", NumberOfCrossings )
-    print("LAMBDA_PLUS::NUMBEROFPIXEL    = ", NumberOfPixels )
+
 
     # Validate circles to be used
     image_features_lambdaplus.flag_validate_circles()

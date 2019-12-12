@@ -12,6 +12,9 @@ from FeaturesExtractor.tools import *
 from FeaturesExtractor import parameters
 
 import matplotlib.pyplot as plt
+from matplotlib.patches import Circle
+
+from astropy.table import Table
 
 
 #-----------------------------------------------------------------------------------------------------------------------
@@ -72,7 +75,8 @@ class FeatureCircle(object):
         self.r0           = r
         self.index        = index
 
-
+    def distance(self,acircle):
+        return np.sqrt((acircle.x0-self.x0)**2 + (acircle.y0-self.y0)**2 )
 
 
 
@@ -107,6 +111,8 @@ class FeatureImage(object):
         self.numberoflines  = np.array([], dtype=int)        # number of segments crossing the circles
         self.numberofpoints = np.array([], dtype=int)        # number of points from extrapolated lines
         self.flag_validated_circles = np.array([], dtype=bool)     # number of validated circle
+
+        self.circlesummary        = Table(names=('index', 'x0', 'y0' ,"r0"), dtype=('i4', 'i4','i4','i4'))
 
         self.my_logger.info(f'\n\t Create FeatureImage')
 
@@ -217,7 +223,11 @@ class FeatureImage(object):
             thecircle=FeatureCircle(center_x,center_y,radius,index)
             #print(index, " ", center_x," ",center_y," ",radius )
             self.circles.append(thecircle)
+            self.circlesummary.add_row((index,center_x,center_y,radius))
             index+=1
+
+        if parameters.DEBUG:
+            print(self.circlesummary)
 
         nbcircles=len(self.circles)
         self.my_logger.info(f'\n\tNumber of Hough circles  {nbcircles} found')
@@ -311,12 +321,23 @@ class FeatureImage(object):
             sum_in_circle=round(sum_in_circle, 0)
             self.signal=np.append(self.signal,sum_in_circle)
 
+        self.circlesummary["signal"]  =  self.signal
         self.signal=self.signal/self.signal.max()
+        self.circlesummary['signal'].format = "%10.0f"
+
+        self.circlesummary["fraction"] = self.signal
+        self.circlesummary['fraction'].format = "%1.3f"
+
+        if parameters.DEBUG:
+            print(self.circlesummary)
+
 
         return self.signal
 
     # --------------------------------------------------------------------------
-    def compute_line_in_circles(self):
+    def compute_line_in_circles(self,img=None,ax=None, scale="log", title="Extrapolated lines", units="Image units", plot_stats=False,
+                       figsize=[7.5, 7], aspect=None, vmin=None, vmax=None,
+                       cmap="gray", cax=None, linecolor="magenta", linewidth=0.5):
         """
         FeatureImage::compute_line_in_circles(self)
 
@@ -327,12 +348,30 @@ class FeatureImage(object):
 
         self.my_logger.info(f'\n\t compute line in circles ')
 
-        X = np.arange(0, self.Nx)
 
-        self.numberoflines = np.array([], dtype=int)   # number of segments crossing the circles
+        if isinstance(img, np.ndarray):
+            data = img
+        else:
+            data = self.img
+
+
+        if ax is None:
+            plt.figure(figsize=figsize)
+            ax = plt.gca()
+
+
+
+        plot_image_simple(ax, data=data, scale=scale, title=title, units=units, cax=cax, aspect=aspect, vmin=vmin,
+                          vmax=vmax, cmap=cmap)
+
+
+        X = np.arange(0, data.shape[1])
+
+        self.numberoflines  = np.array([], dtype=int)   # number of segments crossing the circles
         self.numberofpoints = np.array([], dtype=int)  # number of points from extrapolated lines
 
         # loop in circles
+
         for circle in self.circles:
             # loop on lines
             NumberOfCrossings = 0
@@ -343,14 +382,26 @@ class FeatureImage(object):
                 Z   = np.polyfit([line.x1,line.x2], [line.y1,line.y2], 1)
                 pol = np.poly1d(Z)
                 Y   = pol(X)
-                theindexes=np.where( (X-circle.x0)**2+(Y-circle.y0)**2 <circle.r0**2)[0]
-                if len(theindexes)>0:
+                theindexes = np.where( (X-circle.x0)**2+(Y-circle.y0)**2 <circle.r0**2)[0]
+                if len(theindexes) > 0:
                     NumberOfCrossings+=1
                     NumberOfPixels+=len(theindexes)
+                    ax.plot(X,Y,'r-',lw=0.5)
 
             # compute circle by circles
             self.numberoflines  =  np.append(self.numberoflines, NumberOfCrossings)
             self.numberofpoints =  np.append(self.numberofpoints, NumberOfPixels)
+
+        self.circlesummary["NbLines"]  = self.numberoflines
+        self.circlesummary["NbPoints"] = self.numberofpoints
+
+        if parameters.DEBUG:
+            print(self.circlesummary)
+
+        plt.xlim(0,data.shape[1])
+        plt.ylim(0,data.shape[0])
+        plt.show()
+
 
         return self.numberoflines,self.numberofpoints
 
@@ -373,26 +424,46 @@ class FeatureImage(object):
         self.flag_validated_circles = np.full(shape=len(self.circles), fill_value=True, dtype=np.bool)
 
 
-
+        # Step One : Erase irrelevant circles
         if len(self.numberoflines) > 0 and len(self.numberofpoints) > 0:
             erase_index1 = np.where(np.logical_or(self.numberofpoints == 0, self.numberoflines == 0))[0]
-            print("erase_index1 = ", erase_index1)
-            print("self.signal = ", self.signal)
             erase_index2 = np.where(self.signal < parameters.HOUGH_SIGNAL_THRESHOLD)[0]
-            print("erase_index2 = ", erase_index2)
             erase_index = np.union1d(erase_index1, erase_index2)
-            print("erase_index = ", erase_index)
             self.flag_validated_circles[erase_index] = False
 
-        print("flag_plot_circle = ", self.flag_validated_circles)
 
 
-        for index in np.arange(len(self.flag_validated_circles)):
-            if self.flag_validated_circles[index]:
-                x0=self.circles[index].x0
-                y0 = self.circles[index].y0
-                r0 = self.circles[index].r0
-                print(" validated circle {} :: ({},{}) {}".format(index,x0,y0,r0))
+        # Step Tow : Eliminate encapsulated circles
+        all_pairs=[]
+        remaining_ids=np.where(self.flag_validated_circles)[0]
+
+
+        for idx1 in np.arange(len(remaining_ids)):
+            id1=remaining_ids[idx1]
+            for idx2 in np.arange(idx1+1,len(remaining_ids)):
+                id2=remaining_ids[idx2]
+                dist=self.circles[id1].distance(self.circles[id2])
+                if dist <= 3 :
+                    all_pairs.append((id1,id2))
+
+        for p in all_pairs:
+            id1,id2=p
+            if self.circles[id1].r0 < self.circles[id2].r0:
+                print("unvalidate circle ",id1)
+                self.flag_validated_circles[id1] = False
+                self.circlesummary["validation"] = self.flag_validated_circles[id1]
+            else:
+                print("unvalidate circle", id2)
+                self.flag_validated_circles[id2] = False
+                self.circlesummary["validation"] = self.flag_validated_circles[id2]
+
+
+        self.circlesummary["validation"] = self.flag_validated_circles
+
+        if parameters.DEBUG:
+            print(self.circlesummary)
+
+
 
     #----------------------------------------------------------------------------------
     def flag_validate_lines(self):
@@ -407,7 +478,7 @@ class FeatureImage(object):
 
         self.my_logger.info(f'\n\t flag validate lines')
 
-        print("self.flag_validated_circles = ", self.flag_validated_circles)
+
 
         index = 0
         X = np.arange(0, self.Nx)
@@ -443,14 +514,17 @@ class FeatureImage(object):
         :return:
         """
 
-        self.my_logger.info(f'\n\t plot circles profiles')
+        self.my_logger.info(f'\n\t circles profiles')
 
 
         n1 = parameters.NBRADIUS
         n2 = parameters.RADIUSFRACTION
 
+        fit_X0=np.zeros(len(self.circles))
+        fit_Y0 = np.zeros(len(self.circles))
 
-        print("self.flag_validated_circles = ",self.flag_validated_circles)
+        errfit_X0 = np.zeros(len(self.circles))
+        errfit_Y0 = np.zeros(len(self.circles))
 
         index=0
         # loop on circles
@@ -463,8 +537,6 @@ class FeatureImage(object):
                     r0=circle.r0
                     idx0=circle.index
 
-                    # info
-                    print(" validated circle {} :: ({},{}) {}".format(index, x0, y0, r0))
 
                     # extract the profile
                     bandX = img[int(y0 - n1 * r0):int(y0 + n1 * r0), int(x0 - n1 * r0):int(x0 + n1 * r0)]
@@ -488,6 +560,9 @@ class FeatureImage(object):
                     ## get x and y axis
                     xx = np.arange(int(x0 - n1 * r0), int(x0 + n1 * r0))
                     yy = np.arange(int(y0 - n1 * r0), int(y0 + n1 * r0))
+
+                    extent_BandX = [int(x0 - n1 * r0),int(y0 - n1 * r0), int(x0 + n1 * r0), int(y0 + n1 * r0)  ]
+                    extent_BandY = [int(x0 - n1 * r0), int(y0 - n1 * r0), int(x0 + n1 * r0), int(y0 + n1 * r0)]
 
                     xx_cut = np.arange(int(x0 - n2 * r0), int(x0 + n2 * r0))
                     yy_cut = np.arange(int(y0 - n2 * r0), int(y0 + n2 * r0))
@@ -531,25 +606,20 @@ class FeatureImage(object):
                     err_x = np.abs(the_fit_x - x0)
                     err_y = np.abs(the_fit_y - y0)
 
+                    fit_X0[idx0]  = the_fit_x
+                    fit_Y0[idx0] =  the_fit_y
+
+                    errfit_X0[idx0] = err_x
+                    errfit_Y0[idx0] = err_y
+
+
+
+
+
                     ## plot
                     title = "circle  id={} :: (x0,y0) = ({},{}) , r0 = {}".format(idx0, x0, y0, r0)
 
-                    # 2D Plot
-                    thecircle1 = plt.Circle((x0, y0), r0, color="red", fill=False, lw=2)
-                    thecircle2 = plt.Circle((x0, y0), r0, color="red", fill=False, lw=2)
 
-                    fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
-                    ax1.imshow(bandX,origin='lower',cmap="gray")
-                    ax1.add_artist(thecircle1)
-                    ax1.set_title("Band X")
-                    ax1.set_xlabel("X")
-
-                    ax2.imshow(bandY, origin='lower', cmap="gray")
-                    ax2.add_artist(thecircle2)
-                    ax2.set_title("Band Y")
-                    ax2.set_xlabel("Y")
-                    plt.suptitle(title)
-                    plt.show()
 
 
 
@@ -584,8 +654,44 @@ class FeatureImage(object):
 
                     plt.suptitle(title)
                     plt.show()
+
+
+                    # 2D Plot
+                    fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
+                    ax1.imshow(bandX, origin='lower', cmap="gray",extent= extent_BandX )
+                    thecircle1 = Circle((x0, y0), r0, color="red", fill=False, lw=2)
+                    ax1.add_patch(thecircle1)
+                    # Draw a point at the location (3, 9) with size 1000
+                    ax1.scatter( the_fit_x,  the_fit_y, s=10,color="magenta")
+                    ax1.set_title("Band X")
+                    ax1.set_xlabel("X")
+
+                    ax2.imshow(bandY, origin='lower', cmap="gray",extent= extent_BandY )
+                    thecircle2 = Circle((x0, y0), r0, color="blue", fill=False, lw=2)
+                    ax2.add_patch(thecircle2)
+                    ax2.scatter(the_fit_x, the_fit_y, s=10, color="magenta")
+                    ax2.set_title("Band Y")
+                    ax2.set_xlabel("Y")
+                    plt.suptitle(title)
+                    plt.show()
+
+
+
             index+=1
 
+        # save in summary
+        self.circlesummary["x0_fit"] = fit_X0
+        self.circlesummary["y0_fit"] = fit_Y0
 
+        self.circlesummary["err_x0_fit"] = errfit_X0
+        self.circlesummary["err_y0_fit"] = errfit_Y0
+
+        self.circlesummary["x0_fit"].format = "%3.2f"
+        self.circlesummary["y0_fit"].format = "%3.2f"
+        self.circlesummary["err_x0_fit"].format = "%3.2f"
+        self.circlesummary["err_y0_fit"].format = "%3.2f"
+
+        if parameters.DEBUG:
+            print(self.circlesummary)
 
 
