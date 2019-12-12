@@ -129,7 +129,8 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
 
 
     # write table
-    image_features_lambdaplus.circlesummary.write(os.path.join(output_directory,parameters.FILENAME_LP_SUMMARYTABLE), format='ascii')
+    image_features_lambdaplus.circlesummary.write(os.path.join(output_directory,parameters.FILENAME_LP_SUMMARYTABLE),
+                                                  format='ascii',overwrite=True)
 
 
 

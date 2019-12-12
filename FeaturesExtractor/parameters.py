@@ -68,12 +68,12 @@ LINE_GAP                = 5
 # Hough Circle Detection
 #------------------------------------------------------------------------
 # Detect two radii
-HOUGH_RADIUS_MIN        = 5
+HOUGH_RADIUS_MIN        = 10
 HOUGH_RADIUS_MAX        = 100
 HOUGH_RADIUS_STEP       =  2
 
 # number of circles
-NB_HOUGH_CIRCLE_PEAKS   = 8
+NB_HOUGH_CIRCLE_PEAKS   = 20
 
 # erase circle having signal sum less than this threshold
 HOUGH_SIGNAL_THRESHOLD  = 0.01

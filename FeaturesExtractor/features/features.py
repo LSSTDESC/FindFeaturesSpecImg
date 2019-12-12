@@ -529,9 +529,15 @@ class FeatureImage(object):
         self.my_logger.info(f'\n\t plot validated lines ')
 
 
-        mycol=["r","b","g","m","orange","y","c", "r","b","g","m","orange","y","c"]
+        #mycol=["r","b","g","m","orange","y","c", "r","b","g","m","orange","y","c"]
 
+        #discretized_jet = cmap_discretize(matplotlib.cm.jet, len(self.circles))
 
+        # wavelength bin colors
+        jet = plt.get_cmap('jet')
+        cNorm = mpl.colors.Normalize(vmin=0, vmax=len(self.circles))
+        scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
+        all_colors = scalarMap.to_rgba(np.arange(len(self.circles)), alpha=1)
 
         if isinstance(img, np.ndarray):
             data = img
@@ -548,14 +554,16 @@ class FeatureImage(object):
         # loop on lines
         for segm in self.lines:
             if segm.flag:
-                col=mycol[segm.circlesindex[0]]
+                #col=mycol[segm.circlesindex[0]]
+                col=all_colors[segm.circlesindex[0]]
                 ax.plot([segm.x1,segm.x2],[segm.y1,segm.y2],color=col,lw=linewidth)
 
         # loop on circles
         idx=0
         for circle in self.circles:
             if self.flag_validated_circles[idx]:
-                col = mycol[idx]
+                #col = mycol[idx]
+                col = all_colors[idx]
                 thecircle = Circle((circle.x0, circle.y0), circle.r0, color=col, fill=False, lw=2)
 
                 ax.add_patch(thecircle)
@@ -589,13 +597,20 @@ class FeatureImage(object):
                 # loop on line
                 for segm in self.lines:
                     if segm.flag:
-                        if segm.circlesindex[0] == idx:
+                        if segm.circlesindex[0] == idx and segm.length>0 :
                             all_theta_circle.append(segm.angle)
                             all_weight_circle.append(segm.length)
 
                 all_theta_circle=np.array(all_theta_circle)
                 all_weight_circle=np.array(all_weight_circle)
-                themean,thesigma=weighted_avg_and_std(all_theta_circle, all_weight_circle)
+                weight_sum=np.sum(all_weight_circle)
+
+                if weight_sum > 0 :
+                    themean,thesigma=weighted_avg_and_std(all_theta_circle, all_weight_circle)
+                else:
+                    themean  = 0
+                    thesigma = 0
+
                 theta_table[idx]=themean
                 err_theta_table[idx]=thesigma
 
