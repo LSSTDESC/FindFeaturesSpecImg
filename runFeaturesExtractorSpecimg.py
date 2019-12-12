@@ -6,6 +6,7 @@ from FeaturesExtractor.featuresextractor import FeatureExtractor
 import os
 import sys
 import pandas as pd
+import re
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
@@ -32,6 +33,17 @@ if __name__ == "__main__":
     file_name = args.input[0]
     config_name = args.config
     output_directory=args.output_directory
+
+    # the tag to find the good filename
+
+    # Re Tag to identify the input file rootname
+    RETAGDRNAME = "(.*).fit$.*"
+
+    # index output filename by file rootname
+    rootname=re.findall( RETAGDRNAME,os.path.basename(file_name))
+    #rename output file
+    if len(rootname)>0 :
+        output_directory=os.path.join(output_directory,rootname[0])
 
     FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini')
 

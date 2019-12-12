@@ -561,8 +561,9 @@ class FeatureImage(object):
                     xx = np.arange(int(x0 - n1 * r0), int(x0 + n1 * r0))
                     yy = np.arange(int(y0 - n1 * r0), int(y0 + n1 * r0))
 
-                    extent_BandX = [int(x0 - n1 * r0),int(y0 - n1 * r0), int(x0 + n1 * r0), int(y0 + n1 * r0)  ]
-                    extent_BandY = [int(x0 - n1 * r0), int(y0 - n1 * r0), int(x0 + n1 * r0), int(y0 + n1 * r0)]
+                    # left , right, bottom, top
+                    extent_BandX = [int(x0 - n1 * r0),int(y0 + n1 * r0), int(x0 - n1 * r0), int(y0 + n1 * r0)  ]
+                    extent_BandY = [int(x0 - n1 * r0), int(y0 + n1 * r0), int(x0 - n1 * r0), int(y0 + n1 * r0)]
 
                     xx_cut = np.arange(int(x0 - n2 * r0), int(x0 + n2 * r0))
                     yy_cut = np.arange(int(y0 - n2 * r0), int(y0 + n2 * r0))
