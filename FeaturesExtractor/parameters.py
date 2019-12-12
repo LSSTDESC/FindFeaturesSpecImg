@@ -84,7 +84,10 @@ HOUGH_SIGNAL_THRESHOLD  = 0.01
 NBRADIUS                = 1
 RADIUSFRACTION          = 0.25
 
-
+#-------------------------------------------------------------------------
+# Save output table
+#-------------------------------------------------------------------------
+FILENAME_LP_SUMMARYTABLE = "lambda_plus_summary_table.txt"
 
 # Plotting
 PAPER = False

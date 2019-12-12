@@ -5,7 +5,7 @@ from FeaturesExtractor.features.features import *
 from FeaturesExtractor.tools import *
 from FeaturesExtractor import parameters
 
-
+import sys
 
 
 def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini'):
@@ -119,6 +119,20 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
 
     # circle profile
     image_features_lambdaplus.get_circles_inprofiles(image.img_cube[parameters.IndexImg.lambda_plus])
+
+    # check validated line segments
+    image_features_lambdaplus.plot_validated_lines(img=image.img_cube[parameters.IndexImg.lambda_plus])
+
+
+    # calculate angle
+    image_features_lambdaplus.compute_theta()
+
+
+    # write table
+    image_features_lambdaplus.circlesummary.write(os.path.join(output_directory,parameters.FILENAME_LP_SUMMARYTABLE), format='ascii')
+
+
+
 
 
 

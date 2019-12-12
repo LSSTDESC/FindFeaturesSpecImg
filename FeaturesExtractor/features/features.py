@@ -13,6 +13,7 @@ from FeaturesExtractor import parameters
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
+import matplotlib as mpl
 
 from astropy.table import Table
 
@@ -465,7 +466,7 @@ class FeatureImage(object):
 
 
 
-    #----------------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------------------------------------
     def flag_validate_lines(self):
         """
         FeatureImage::flag_validate_lines(self)
@@ -500,10 +501,119 @@ class FeatureImage(object):
                             line.nbcircles += 1
                             line.nbpixincircles += len(theindexes)
                             line.circlesindex=np.append(line.circlesindex,circle.index)  # add in line object a reference to the circle
-            index+=1
+            index+=1 # increase
+
+    #------------------------------------------------------------------------------------------------------------------------
+    def plot_validated_lines(self,img=None,ax=None, scale="log", title="Validated lines", units="Image units", plot_stats=False,
+                       figsize=[7.5, 7], aspect=None, vmin=None, vmax=None,
+                       cmap="gray", cax=None, linecolor="magenta", linewidth=0.5):
+        """
+
+        :param mg:
+        :param ax:
+        :param scale:
+        :param title:
+        :param units:
+        :param plot_stats:
+        :param figsize:
+        :param aspect:
+        :param vmin:
+        :param vmax:
+        :param cmap:
+        :param cax:
+        :param linecolor:
+        :param linewidth:
+        :return:
+        """
+
+        self.my_logger.info(f'\n\t plot validated lines ')
 
 
-    #------------------------------------------------------------------------------------
+        mycol=["r","b","g","m","orange","y","c", "r","b","g","m","orange","y","c"]
+
+
+
+        if isinstance(img, np.ndarray):
+            data = img
+        else:
+            data = self.img
+
+        if ax is None:
+            plt.figure(figsize=figsize)
+            ax = plt.gca()
+
+        plot_image_simple(ax, data=data, scale=scale, title=title, units=units, cax=cax, aspect=aspect, vmin=vmin,
+                          vmax=vmax, cmap=cmap)
+
+        # loop on lines
+        for segm in self.lines:
+            if segm.flag:
+                col=mycol[segm.circlesindex[0]]
+                ax.plot([segm.x1,segm.x2],[segm.y1,segm.y2],color=col,lw=linewidth)
+
+        # loop on circles
+        idx=0
+        for circle in self.circles:
+            if self.flag_validated_circles[idx]:
+                col = mycol[idx]
+                thecircle = Circle((circle.x0, circle.y0), circle.r0, color=col, fill=False, lw=2)
+
+                ax.add_patch(thecircle)
+
+            idx+=1
+
+
+
+
+        plt.show()
+    #-----------------------------------------------------------------------------------------------
+    def compute_theta(self):
+        """
+
+        :return:
+        """
+
+        theta_table = np.zeros(len(self.circles))
+        err_theta_table = np.zeros(len(self.circles))
+
+        all_theta_circle =[]
+        all_weight_circle  = []
+
+        idx = 0
+        # loop on circle
+        for circle in self.circles:
+            all_theta_circle = []
+            all_weight_circle = []
+            if self.flag_validated_circles[idx]:
+
+                # loop on line
+                for segm in self.lines:
+                    if segm.flag:
+                        if segm.circlesindex[0] == idx:
+                            all_theta_circle.append(segm.angle)
+                            all_weight_circle.append(segm.length)
+
+                all_theta_circle=np.array(all_theta_circle)
+                all_weight_circle=np.array(all_weight_circle)
+                themean,thesigma=weighted_avg_and_std(all_theta_circle, all_weight_circle)
+                theta_table[idx]=themean
+                err_theta_table[idx]=thesigma
+
+
+            idx += 1
+
+        self.circlesummary["theta_mean"] = theta_table
+        self.circlesummary["theta_rms"]  = err_theta_table
+
+        self.circlesummary["theta_mean"].format = "%3.2f"
+        self.circlesummary["theta_rms"].format = "%3.2f"
+
+        if parameters.DEBUG:
+            print(self.circlesummary)
+
+
+
+    #------------------------------------------------------------------------------------------------
     def get_circles_inprofiles(self,img):
         """
 
@@ -562,8 +672,8 @@ class FeatureImage(object):
                     yy = np.arange(int(y0 - n1 * r0), int(y0 + n1 * r0))
 
                     # left , right, bottom, top
-                    extent_BandX = [int(x0 - n1 * r0),int(y0 + n1 * r0), int(x0 - n1 * r0), int(y0 + n1 * r0)  ]
-                    extent_BandY = [int(x0 - n1 * r0), int(y0 + n1 * r0), int(x0 - n1 * r0), int(y0 + n1 * r0)]
+                    extent_BandX = [int(x0 - n1 * r0),int(x0 + n1 * r0), int(y0 - n1 * r0), int(y0 + n1 * r0)  ]
+                    extent_BandY = [int(x0 - n1 * r0), int(x0 + n1 * r0), int(y0 - n1 * r0), int(y0 + n1 * r0)]
 
                     xx_cut = np.arange(int(x0 - n2 * r0), int(x0 + n2 * r0))
                     yy_cut = np.arange(int(y0 - n2 * r0), int(y0 + n2 * r0))
@@ -583,11 +693,11 @@ class FeatureImage(object):
                     fit_val_profX=p_x(xx_cut)
                     fit_val_profY = p_y(yy_cut)
 
-                    # derivative
+                    # derivatives of polynoms
                     dp_x = np.polyder(p_x)
                     dp_y = np.polyder(p_y)
 
-                    # roots of the derivative
+                    # roots of the derivatives
                     roots_in_x = np.roots(dp_x)
                     roots_in_y = np.roots(dp_y)
 
@@ -659,7 +769,7 @@ class FeatureImage(object):
 
                     # 2D Plot
                     fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
-                    ax1.imshow(bandX, origin='lower', cmap="gray",extent= extent_BandX )
+                    ax1.imshow(bandX, cmap="gray",extent= extent_BandX )
                     thecircle1 = Circle((x0, y0), r0, color="red", fill=False, lw=2)
                     ax1.add_patch(thecircle1)
                     # Draw a point at the location (3, 9) with size 1000
@@ -667,7 +777,7 @@ class FeatureImage(object):
                     ax1.set_title("Band X")
                     ax1.set_xlabel("X")
 
-                    ax2.imshow(bandY, origin='lower', cmap="gray",extent= extent_BandY )
+                    ax2.imshow(bandY, cmap="gray",extent= extent_BandY )
                     thecircle2 = Circle((x0, y0), r0, color="blue", fill=False, lw=2)
                     ax2.add_patch(thecircle2)
                     ax2.scatter(the_fit_x, the_fit_y, s=10, color="magenta")
