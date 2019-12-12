@@ -33,12 +33,14 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
     my_logger = set_logger(__name__)
     my_logger.info('\n\tStart FeatureExtractor')
 
-    #--------- Load config file
+    #--------- Load config file ---------------
     load_config(config)
 
     #-------- Load reduced image
     image = Image(file_name)
 
+    # Set output path
+    ensure_dir(output_directory)
 
 
     if parameters.DEBUG and parameters.FLAG_PLOT_IMG :
@@ -117,52 +119,49 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
 
 
     # circle profile
-    image_features_lambdaplus.plot_circles_profiles()
+    image_features_lambdaplus.get_circles_inprofiles(image.img_cube[parameters.IndexImg.lambda_plus])
 
 
 
 
-    # ----------------------------
+    # ---------------------------- lambda_minus
     # work on lambda_minus
-    image_features_lambdaminus = FeatureImage(image.img_cube[parameters.IndexImg.lambda_minus_edges])
+    #image_features_lambdaminus = FeatureImage(image.img_cube[parameters.IndexImg.lambda_minus_edges])
 
     # detect lines in lambda_plus
-    image_features_lambdaminus.find_lines()
-    image_features_lambdaplus.plot_lines(image.img_cube[parameters.IndexImg.lambda_minus], scale="log", cmap=plt.cm.gray,
-                                         title="Hough Lines detected in lambda_minus edges")
+    #image_features_lambdaminus.find_lines()
+    #image_features_lambdaplus.plot_lines(image.img_cube[parameters.IndexImg.lambda_minus], scale="log", cmap=plt.cm.gray,
+    #                                     title="Hough Lines detected in lambda_minus edges")
 
     # detect circles
-    image_features_lambdaminus.find_circles()
+    #image_features_lambdaminus.find_circles()
     #image_features_lambdaminus.plot_circles(image.img_cube[parameters.IndexImg.img], scale="log", cmap=plt.cm.gray,
     #                                       title="Hough circles detected in lambda_minus edges")
 
     # signal sum in circles
-    thesignalsum = image_features_lambdaminus.compute_signal_in_circles(image.img_cube[parameters.IndexImg.img])
+    #thesignalsum = image_features_lambdaminus.compute_signal_in_circles(image.img_cube[parameters.IndexImg.img])
 
-    print("LAMBDA_MINUS::SIGNALSUM = ", thesignalsum)
+    #print("LAMBDA_MINUS::SIGNALSUM = ", thesignalsum)
 
     # circle crossing
-    NumberOfCrossings, NumberOfPixels = image_features_lambdaminus.compute_line_in_circles()
+    #NumberOfCrossings, NumberOfPixels = image_features_lambdaminus.compute_line_in_circles()
 
-    print("LAMBDA_MINUS::NUMBEROFCROSSING = ", NumberOfCrossings)
-    print("LAMBDA_MINUS::NUMBEROFPIXEL    = ", NumberOfPixels)
+    #print("LAMBDA_MINUS::NUMBEROFCROSSING = ", NumberOfCrossings)
+    #print("LAMBDA_MINUS::NUMBEROFPIXEL    = ", NumberOfPixels)
 
     # Validate circles to be used
-    image_features_lambdaminus.flag_validate_circles()
+    #image_features_lambdaminus.flag_validate_circles()
     # Validate line segments
-    image_features_lambdaminus.flag_validate_lines()
+    #image_features_lambdaminus.flag_validate_lines()
 
     # plot
-    image_features_lambdaminus.plot_circles(image.img_cube[parameters.IndexImg.lambda_minus], scale="log", cmap=plt.cm.gray,
-                                           title="Hough circles detected-validated in lambda_minus edges")
-
-
+    #image_features_lambdaminus.plot_circles(image.img_cube[parameters.IndexImg.lambda_minus], scale="log", cmap=plt.cm.gray,
+    #                                      title="Hough circles detected-validated in lambda_minus edges")
 
     # circle profile
-    image_features_lambdaplus.plot_circles_profiles()
+    #image_features_lambdaplus.plot_circles_profiles(image.img_cube[parameters.IndexImg.lambda_minus])
 
 
-    # Set output path
-    ensure_dir(output_directory)
+
 
 

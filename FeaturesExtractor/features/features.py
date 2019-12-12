@@ -41,11 +41,13 @@ class FeatureLine(object):
         self.angle          = 0           # angle of segment in degree
 
         self.flag           = False       # this segment will be validated if it is in a validated circle
-        self.nbcircles      = 0
-        self.nbpixincircles = 0
+        self.nbcircles      = 0           # number of circles associated to that line
+        self.nbpixincircles = 0           # number of pixels from the extrapolated line in the circle
+
+        self.circlesindex   = np.array([], dtype=int)   # container of associated circle
 
         if dx!= 0:
-            self.angle         = np.arctan(dy/dx)*180./np.pi
+            self.angle         = np.arctan(dy/dx)*180./np.pi   # angle of that segment
 
 
 
@@ -90,7 +92,7 @@ class FeatureImage(object):
 
         self.my_logger = set_logger(self.__class__.__name__)
 
-        self.img           = img
+        self.img           = img                              # base edge image on which circles and line are found
         self.Nx            = self.img.shape[1]
         self.Ny            = self.img.shape[0]
 
@@ -426,11 +428,17 @@ class FeatureImage(object):
                             line.flag=True
                             line.nbcircles += 1
                             line.nbpixincircles += len(theindexes)
+                            line.circlesindex=np.append(line.circlesindex,circle.index)  # add in line object a reference to the circle
+            index+=1
+
+
     #------------------------------------------------------------------------------------
-    def plot_circles_profiles(self):
+    def get_circles_inprofiles(self,img):
         """
 
-        FeatureImage::plot_circles_profiles(self
+        FeatureImage::get_circles_inprofiles
+
+        For each validated circle, it extract the profile at get the true center
 
         :return:
         """
@@ -438,10 +446,9 @@ class FeatureImage(object):
         self.my_logger.info(f'\n\t plot circles profiles')
 
 
-        n1 = 3.0
-        n2 = 2.0
-        n3 = 1.0
-        n4 = 4.0
+        n1 = parameters.NBRADIUS
+        n2 = parameters.RADIUSFRACTION
+
 
         print("self.flag_validated_circles = ",self.flag_validated_circles)
 
@@ -454,42 +461,126 @@ class FeatureImage(object):
                     y0=circle.y0
                     x0=circle.x0
                     r0=circle.r0
+                    idx0=circle.index
 
+                    # info
                     print(" validated circle {} :: ({},{}) {}".format(index, x0, y0, r0))
 
-                    bandX = self.img[int(y0 - n2 * r0):int(y0 + n2 * r0), int(x0 - n2 * r0):int(x0 + n2 * r0)]
-                    bandY = self.img[int(y0 - n2 * r0):int(y0 + n2 * r0), int(x0 - n2 * r0):int(x0 + n2 * r0)]
+                    # extract the profile
+                    bandX = img[int(y0 - n1 * r0):int(y0 + n1 * r0), int(x0 - n1 * r0):int(x0 + n1 * r0)]
+                    bandY = img[int(y0 - n1 * r0):int(y0 + n1 * r0), int(x0 - n1 * r0):int(x0 + n1 * r0)]
+
+                    bandX_cut = img[int(y0 - n1 * r0):int(y0 + n1 * r0), int(x0 - n2 * r0):int(x0 + n2 * r0)]
+                    bandY_cut = img[int(y0 - n2 * r0):int(y0 + n2 * r0), int(x0 - n1 * r0):int(x0 + n1 * r0)]
 
                     profX = np.sum(bandX, axis=0)
                     profY = np.sum(bandY, axis=1)
 
-                    xx = np.arange(int(x0 - n2 * r0), int(x0 + n2 * r0))
-                    yy = np.arange(int(y0 - n2 * r0), int(y0 + n2 * r0))
+                    profX_cut = np.sum(bandX_cut, axis=0)
+                    profY_cut = np.sum(bandY_cut, axis=1)
+
+                    profXMIN=profX.min()
+                    profXMAX = profX.max()
+
+                    profYMIN = profY.min()
+                    profYMAX = profY.max()
+
+                    ## get x and y axis
+                    xx = np.arange(int(x0 - n1 * r0), int(x0 + n1 * r0))
+                    yy = np.arange(int(y0 - n1 * r0), int(y0 + n1 * r0))
+
+                    xx_cut = np.arange(int(x0 - n2 * r0), int(x0 + n2 * r0))
+                    yy_cut = np.arange(int(y0 - n2 * r0), int(y0 + n2 * r0))
+
+                    ## Fit the profile
+                    deg = 5
+
+                    # fit
+                    z_x = np.polyfit(xx_cut, profX_cut, deg)
+                    z_y = np.polyfit(yy_cut, profY_cut, deg)
+
+                    # poly
+                    p_x = np.poly1d(z_x)
+                    p_y = np.poly1d(z_y)
+
+                    ##
+                    fit_val_profX=p_x(xx_cut)
+                    fit_val_profY = p_y(yy_cut)
+
+                    # derivative
+                    dp_x = np.polyder(p_x)
+                    dp_y = np.polyder(p_y)
+
+                    # roots of the derivative
+                    roots_in_x = np.roots(dp_x)
+                    roots_in_y = np.roots(dp_y)
+
+                    # find the realistic root close to circle center
+                    idd = np.argmin(np.abs(roots_in_x - x0))
+                    the_fit_x = roots_in_x[idd]
+
+                    idd = np.argmin(np.abs(roots_in_y - y0))
+                    the_fit_y = roots_in_y[idd]
 
 
+                    # get the root being real
+                    the_fit_x = np.real(the_fit_x)
+                    the_fit_y = np.real(the_fit_y)
+
+                    #the error
+                    err_x = np.abs(the_fit_x - x0)
+                    err_y = np.abs(the_fit_y - y0)
+
+                    ## plot
+                    title = "circle  id={} :: (x0,y0) = ({},{}) , r0 = {}".format(idx0, x0, y0, r0)
+
+                    # 2D Plot
+                    thecircle1 = plt.Circle((x0, y0), r0, color="red", fill=False, lw=2)
+                    thecircle2 = plt.Circle((x0, y0), r0, color="red", fill=False, lw=2)
 
                     fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
                     ax1.imshow(bandX,origin='lower',cmap="gray")
+                    ax1.add_artist(thecircle1)
+                    ax1.set_title("Band X")
+                    ax1.set_xlabel("X")
+
                     ax2.imshow(bandY, origin='lower', cmap="gray")
+                    ax2.add_artist(thecircle2)
+                    ax2.set_title("Band Y")
+                    ax2.set_xlabel("Y")
+                    plt.suptitle(title)
                     plt.show()
 
 
 
-                    title="circle (x0,y0) = ({},{}) , r0 = {}".format(x0,y0,r0)
-
-
-
+                    # Profile
                     fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
+                    ax1.plot(xx,profX,"r-",label=" $\lambda$ X profile")
+                    ax1.plot([x0,x0],[profXMIN,profXMAX],"k-",label="circle X center")
+                    ax1.plot([x0-r0, x0-r0], [profXMIN, profXMAX], "k:")
+                    ax1.plot([x0 +r0, x0 + r0], [profXMIN, profXMAX], "k:")
 
-                    ax1.plot(xx,profX,"r-")
+                    ax1.plot(xx_cut,fit_val_profX,"g-",label="fitted X profile")
+                    ax1.plot([the_fit_x,the_fit_x],[profXMIN,profXMAX],"b-",label="fitted X minimum")
+
+
                     ax1.grid()
                     ax1.set_xlabel("X")
                     ax1.set_title("X")
+                    ax1.legend()
 
-                    ax2.plot(yy, profY, "r-")
+                    ax2.plot(yy, profY, "r-",label="$\lambda$ Y profile")
+                    ax2.plot([y0, y0], [profYMIN, profYMAX], "k-",label="circle Y center")
+                    ax2.plot([y0 - r0, y0 - r0], [profYMIN, profYMAX], "k:")
+                    ax2.plot([y0 + r0, y0 + r0], [profYMIN, profYMAX], "k:")
+
+                    ax2.plot(yy_cut, fit_val_profY, "g-",label="fitted Y profile")
+                    ax2.plot([the_fit_y, the_fit_y], [profXMIN, profXMAX], "b-",label="fitted Y minimum")
+
                     ax2.grid()
                     ax2.set_xlabel("Y")
                     ax2.set_title("Y")
+                    ax2.legend()
 
                     plt.suptitle(title)
                     plt.show()

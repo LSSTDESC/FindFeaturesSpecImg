@@ -78,6 +78,13 @@ NB_HOUGH_CIRCLE_PEAKS   = 8
 # erase circle having signal sum less than this threshold
 HOUGH_SIGNAL_THRESHOLD  = 0.01
 
+#--------------------------------------------------------------------------
+# Profile : get_circles_inprofiles
+#-------------------------------------------------------------------------
+NBRADIUS                = 1
+RADIUSFRACTION          = 0.25
+
+
 
 # Plotting
 PAPER = False
