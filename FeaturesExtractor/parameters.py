@@ -81,8 +81,16 @@ HOUGH_RADIUS_STEP       =  2
 # number of circles
 NB_HOUGH_CIRCLE_PEAKS   = 3
 
+
+
+#------------------------------------------------------------------------
+# Circle Validation
+#--------------------------------------------------------------------------
 # erase circle having signal sum less than this threshold
-HOUGH_SIGNAL_THRESHOLD  = 0.01
+CIRCLE_SIGNAL_THRESHOLD  = 0.01     # less than 1.0
+CIRCLE_MIN_DISTANCE      =  5       # minimum distance between tow circle center
+
+
 
 #--------------------------------------------------------------------------
 # Profile : get_circles_inprofiles

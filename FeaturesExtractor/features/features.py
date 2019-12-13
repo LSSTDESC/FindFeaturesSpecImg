@@ -488,7 +488,7 @@ class FeatureImage(object):
         # Step One : Erase irrelevant circles
         if len(self.numberoflines) > 0 and len(self.numberofpoints) > 0:
             erase_index1 = np.where(np.logical_or(self.numberofpoints == 0, self.numberoflines == 0))[0]
-            erase_index2 = np.where(self.signal < parameters.HOUGH_SIGNAL_THRESHOLD)[0]
+            erase_index2 = np.where(self.signal < parameters.CIRCLE_SIGNAL_THRESHOLD)[0]
             erase_index = np.union1d(erase_index1, erase_index2)
             self.flag_validated_circles[erase_index] = False
 
@@ -504,9 +504,11 @@ class FeatureImage(object):
             for idx2 in np.arange(idx1+1,len(remaining_ids)):
                 id2=remaining_ids[idx2]
                 dist=self.circles[id1].distance(self.circles[id2])
-                if dist <= 3 :
+                # make a circle pair
+                if dist <= parameters.CIRCLE_MIN_DISTANCE :
                     all_pairs.append((id1,id2))
 
+        # erase the circle with the smallest radius
         for p in all_pairs:
             id1,id2=p
             if self.circles[id1].r0 < self.circles[id2].r0:
@@ -518,7 +520,7 @@ class FeatureImage(object):
                 self.flag_validated_circles[id2] = False
                 self.circlesummary["validation"] = self.flag_validated_circles[id2]
 
-
+        # copy the validation flag in circle summary
         self.circlesummary["validation"] = self.flag_validated_circles
 
         if parameters.DEBUG:
