@@ -98,6 +98,13 @@ CIRCLE_MIN_DISTANCE      =  5       # minimum distance between tow circle center
 NBRADIUS                = 1
 RADIUSFRACTION          = 0.25
 
+
+#-----------------------------------------------------------------------
+# Optimisation to find the global minimum
+#-----------------------------------------------------------------------
+VIGNETTE_SIZE           = 16   # must be even
+
+
 #-------------------------------------------------------------------------
 # Save output table
 #-------------------------------------------------------------------------

@@ -15,6 +15,9 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 import matplotlib as mpl
 
+from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits import mplot3d
+
 from astropy.table import Table
 
 
@@ -75,6 +78,10 @@ class FeatureCircle(object):
         self.y0           = y
         self.r0           = r
         self.index        = index
+
+        self.x_fit        = 0
+        self.y_fit        = 0
+
 
     def distance(self,acircle):
         return np.sqrt((acircle.x0-self.x0)**2 + (acircle.y0-self.y0)**2 )
@@ -800,18 +807,17 @@ class FeatureImage(object):
                     errfit_X0[idx0] = err_x
                     errfit_Y0[idx0] = err_y
 
+                    # save the fit result for later optimisation
+                    circle.x_fit    = the_fit_x
+                    circle.y_fit    = the_fit_y
 
 
+                    # plot profile and 2D view for each circle
 
-
-                    ## plot
                     title = "circle  id={} :: (x0,y0) = ({},{}) , r0 = {}".format(idx0, x0, y0, r0)
 
 
-
-
-
-                    # Profile
+                    ##  Profile
                     fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
                     ax1.plot(xx,profX,"r-",label=" $\lambda$ X profile")
                     ax1.plot([x0,x0],[profXMIN,profXMAX],"k-",label="circle X center")
@@ -844,7 +850,7 @@ class FeatureImage(object):
                     plt.show()
 
 
-                    # 2D Plot
+                    ## 2D Plot
                     fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
                     ax1.imshow(bandX, cmap="gray",extent= extent_BandX )
                     thecircle1 = Circle((x0, y0), r0, color="red", fill=False, lw=2)
@@ -883,3 +889,54 @@ class FeatureImage(object):
             print(self.circlesummary)
 
 
+    #--------------------------------------------------------------------------------------------------------------------------
+    def get_optimum_center(self,img, title="lambda_plus",figsize=[8, 8],cmap="terrain"):
+        """
+
+        :param img:
+        :return:
+        """
+
+        self.my_logger.info(f'\n\t optimize centering')
+        print("validated circles flags : ", self.flag_validated_circles)
+
+        w = int(parameters.VIGNETTE_SIZE / 2)
+
+        index = 0
+        # loop on circles
+        for circle in self.circles:
+            # if the validation of circles has proceed
+            if len(self.flag_validated_circles) > 0:
+                if self.flag_validated_circles[index]:
+                    y0 = int(circle.y_fit)
+                    x0 = int(circle.x_fit)
+                    idx0 = circle.index
+
+                    #additionnal constraint on circle (x,y fit had to be done)
+                    if x0-w > 0 and y0-w > 0 :
+
+                        x = np.arange(x0-w, x0+w+1)
+                        y = np.arange(y0-w, y0+w+1)
+                        xgrid, ygrid = np.meshgrid(x, y)
+
+                        cropped_image=img[y0-w:y0+w+1,x0-w:x0+w+1]
+
+
+                        thetitle = title + " : Validated circle  id={} :: fitted (x0,y0) = ({},{}) , ".format(idx0, x0, y0)
+
+                        fig = plt.figure(figsize=figsize)
+                        ax = fig.add_subplot(111, projection='3d')
+                        ax.view_init(45, -45)
+                        ax.plot_surface(xgrid, ygrid, cropped_image, cmap=cmap)
+                        ax.set_xlabel('x')
+                        ax.set_ylabel('y')
+                        plt.suptitle(thetitle)
+
+                        plt.show()
+
+
+
+
+
+            index+=1
+        # end loop
