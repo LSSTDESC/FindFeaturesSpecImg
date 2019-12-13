@@ -33,8 +33,8 @@ NBIMG                  = 10
 
 # plag to select which image to plot
 FLAG_PLOT_IMG                 = False
-FLAG_PLOT_LAMBDA_PLUS         = True
-FLAG_PLOT_LAMBDA_MINUS        = True
+FLAG_PLOT_LAMBDA_PLUS         = False
+FLAG_PLOT_LAMBDA_MINUS        = False
 FLAG_PLOT_LAMBDA_THETA        = False
 FLAG_PLOT_IMG_CLIP            = False
 FLAG_PLOT_LAMBDA_PLUS_CLIP    = False
@@ -65,15 +65,21 @@ LINE_LENGTH             = 20
 LINE_GAP                = 5
 
 #------------------------------------------------------------------------
+# Erase line margin
+#------------------------------------------------------------------------
+LINE_ERASE_MARGIN       = 10
+
+
+#------------------------------------------------------------------------
 # Hough Circle Detection
 #------------------------------------------------------------------------
 # Detect two radii
-HOUGH_RADIUS_MIN        = 10
+HOUGH_RADIUS_MIN        = 15
 HOUGH_RADIUS_MAX        = 100
 HOUGH_RADIUS_STEP       =  2
 
 # number of circles
-NB_HOUGH_CIRCLE_PEAKS   = 20
+NB_HOUGH_CIRCLE_PEAKS   = 3
 
 # erase circle having signal sum less than this threshold
 HOUGH_SIGNAL_THRESHOLD  = 0.01

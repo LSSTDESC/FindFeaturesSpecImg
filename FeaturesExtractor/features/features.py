@@ -134,12 +134,15 @@ class FeatureImage(object):
         for line_segment in all_lines:
             p0, p1 = line_segment
 
-            dx=p0[0]-p1[0]
-            dy = p0[1] - p1[1]
+            dx=p1[0]-p0[0]
+            dy = p1[1] - p0[1]
 
             if dx!=0 and dy!=0 :
-                theline=FeatureLine(p0,p1,index)
-                #print(line_segment,"  l=" ,theline.length)
+                if dx > 0:
+                    theline=FeatureLine(p0,p1,index)
+                else:
+                    theline = FeatureLine(p1, p0, index)
+
                 self.lines.append (theline)
                 index+=1
 
@@ -198,7 +201,64 @@ class FeatureImage(object):
 
 
 
-    #-----------------------------------------------------------------
+    #-----------------------------------------------------------------------------------------
+
+    def erase_lines(self):
+        """
+         FeatureImage::erase_lines()
+
+         Erase line before applying Hough Circle algorithm
+
+
+        :return:
+        """
+        self.my_logger.info(f'\n\t erase lines')
+
+        X = np.arange(0, self.img.shape[1])
+        Y = np.arange(0, self.img.shape[0])
+
+        XX, YY = np.meshgrid(X, Y)
+
+
+        # loop on line segement
+        index=0
+        for segm in self.lines:
+            x1=segm.x1
+            x2=segm.x2
+            y1=segm.y1
+            y2=segm.y2
+            dx=x2-x1
+            dy=y2-y1
+
+            selected_elements  = np.logical_and(
+                np.logical_and(XX>=x1,XX<=x2),
+                np.logical_and(YY >= dy/dx*(XX-x1)+y1-parameters.LINE_ERASE_MARGIN,
+                                                        YY <= dy/dx*(XX-x1)+y1+parameters.LINE_ERASE_MARGIN))
+
+            #if(index==0):
+            #    newimg=np.zeros(self.img.shape,dtype=float)
+            #    newimg[selected_elements]=1
+            #    plt.figure(figsize=(5,5))
+            #    plt.imshow(newimg,origin="lower",cmap="gray")
+            #    plt.show()
+
+            self.img[selected_elements]=0.0
+
+            index+=1
+        #end of loop on segment
+
+        plt.figure(figsize=(7,7))
+        ax = plt.gca()
+
+        plot_image_simple(ax, data=self.img, scale="lin", title="Erased lines in canny image",cmap="gray")
+
+        # plt.legend()
+        if parameters.DISPLAY:
+            plt.show()
+
+
+
+    #-----------------------------------------------------------------------------------------
 
     def find_circles(self):
         """

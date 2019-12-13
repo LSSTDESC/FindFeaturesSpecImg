@@ -89,6 +89,12 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
     image_features_lambdaplus.plot_lines(image.img_cube[parameters.IndexImg.lambda_plus],scale="log",cmap=plt.cm.gray,
                                          title="Hough Lines detected in lambda_plus edges")
 
+
+    # erase lines in canny before search of circles
+    image_features_lambdaplus.erase_lines()
+
+
+
     # detect circles
     image_features_lambdaplus.find_circles()
     #image_features_lambdaplus.plot_circles(image.img_cube[parameters.IndexImg.img], scale="log",cmap=plt.cm.gray,
