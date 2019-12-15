@@ -157,14 +157,15 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
     image_features_lambdaplus.get_circles_inprofiles(image.img_cube[parameters.IndexImg.lambda_plus])
 
 
-    image_features_lambdaplus.test_incircle_saturation(image.img_cube[parameters.IndexImg.img])
+    # Test if some validated circle have some saturation
+    #---------------------------------------------------------
+    image_features_lambdaplus.test_incircle_saturation(image.img_cube[parameters.IndexImg.img],title="original image",cmap="jet")
 
 
     # optimization for minimum
     # --------------------------
-    image_features_lambdaplus.get_optimum_center(image.img_cube[parameters.IndexImg.img],title="original image",cmap="jet")
     image_features_lambdaplus.get_optimum_center(image.img_cube[parameters.IndexImg.lambda_plus],title="lambda_plus",cmap="jet")
-    image_features_lambdaplus.get_optimum_center(image.img_cube[parameters.IndexImg.lambda_minus],title="lambda_minus",cmap="jet")
+    image_features_lambdaplus.get_optimum_center(image.img_cube[parameters.IndexImg.lambda_minus],title="lambda_minus",cmap="jet",optimize_flag=True)
 
 
 

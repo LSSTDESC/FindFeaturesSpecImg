@@ -98,6 +98,12 @@ CIRCLE_MIN_DISTANCE      =  5       # minimum distance between tow circle center
 NBRADIUS                = 1
 RADIUSFRACTION          = 0.25
 
+#-----------------------------------------------------------------------
+# Test saturation
+#-------------------------------------------------------------------------
+SATURATION_FRACTION_LEVEL       = 0.95          # quantile of the maximum value
+SATURATION_FRACTION_THRESHOLD   = 0.20          # fraction of the number of pixel above SATURATION_FRACTION_LEVEL
+
 
 #-----------------------------------------------------------------------
 # Optimisation to find the global minimum

@@ -20,6 +20,10 @@ from mpl_toolkits import mplot3d
 
 from astropy.table import Table
 
+from scipy import interpolate
+from scipy import optimize
+from scipy.optimize import minimize
+
 
 #-----------------------------------------------------------------------------------------------------------------------
 class FeatureLine(object):
@@ -928,7 +932,7 @@ class FeatureImage(object):
         self.flag_saturation_circles = np.array([], dtype=bool)
 
         # by default plot every circles
-        self.flag_saturation_circles = np.full(shape=len(self.circles), fill_value=True, dtype=np.bool)
+        self.flag_saturation_circles = np.full(shape=len(self.circles), fill_value=False, dtype=np.bool)
 
         w = int(parameters.VIGNETTE_SIZE / 2)
 
@@ -950,8 +954,16 @@ class FeatureImage(object):
 
                         cropped_image = img[y0 - w:y0 + w + 1, x0 - w:x0 + w + 1]
 
-                        thetitle = title + " : Validated circle  id={} :: fitted (x0,y0) = ({},{}) , ".format(idx0, x0,
-                                                                                                              y0)
+                        saturated_pixels      = np.where(cropped_image>parameters.SATURATION_FRACTION_LEVEL*cropped_image.max())
+                        nb_saturated_pixels   = len(saturated_pixels[0])
+                        saturation_fraction   =  nb_saturated_pixels/parameters.VIGNETTE_SIZE**2
+                        saturation_flag       = saturation_fraction>parameters.SATURATION_FRACTION_THRESHOLD
+
+                        if saturation_flag:
+                            self.flag_saturation_circles[index] = True
+
+                        thetitle = title + " : Validated circle  id={} :: fitted (x0,y0) = ({},{}) , Saturation_flag= {}, fraction = {:1.3f}".format(idx0, x0,
+                                                                                                              y0,saturation_flag,saturation_fraction)
 
                         fig = plt.figure(figsize=figsize)
                         ax = fig.add_subplot(111, projection='3d')
@@ -966,8 +978,15 @@ class FeatureImage(object):
             index += 1
         # end loop
 
+        self.circlesummary["saturation"] = self.flag_saturation_circles
+        if parameters.DEBUG:
+            print(self.circlesummary)
+
+
+
+
     #-------------------------------------------------------------------------------------------------------
-    def get_optimum_center(self,img, title="lambda_plus",figsize=[8, 8],cmap="terrain"):
+    def get_optimum_center(self,img, title="lambda_plus",figsize=[16, 8],cmap="terrain",optimize_flag=False):
         """
 
         :param img:
@@ -988,6 +1007,8 @@ class FeatureImage(object):
                     y0 = int(circle.y_fit)
                     x0 = int(circle.x_fit)
                     idx0 = circle.index
+                    saturation_flag=self.flag_saturation_circles[index]
+
 
                     #additionnal constraint on circle (x,y fit had to be done)
                     if x0-w > 0 and y0-w > 0 :
@@ -997,23 +1018,118 @@ class FeatureImage(object):
                         xgrid, ygrid = np.meshgrid(x, y)
 
                         cropped_image=img[y0-w:y0+w+1,x0-w:x0+w+1]
+                        extent=(x0-w,x0+w+1,y0-w,y0+w+1)
 
 
-                        thetitle = title + " : Validated circle  id={} :: fitted (x0,y0) = ({},{}) , ".format(idx0, x0, y0)
+                        thetitle = title + " : Validated circle  id={} :: fit (x0,y0) = ({},{}) saturation = {}, ".format(idx0, x0, y0,saturation_flag)
 
                         fig = plt.figure(figsize=figsize)
-                        ax = fig.add_subplot(111, projection='3d')
-                        ax.view_init(45, -45)
-                        ax.plot_surface(xgrid, ygrid, cropped_image, cmap=cmap)
-                        ax.set_xlabel('x')
-                        ax.set_ylabel('y')
-                        plt.suptitle(thetitle)
+                        ax1 = fig.add_subplot(121, projection='3d')
+                        ax1.view_init(45, -45)
+                        ax1.plot_surface(xgrid, ygrid, cropped_image, cmap=cmap)
+                        ax1.set_xlabel('x')
+                        ax1.set_ylabel('y')
 
+                        ax2= fig.add_subplot(122)
+                        ax2.imshow(cropped_image,origin="lower",extent=extent,cmap=cmap)
+                        ax2.plot([x0-w,x0+w+1],[y0,y0],"k-")
+                        ax2.plot([x0, x0], [y0-w, y0+w+1], "k-")
+                        ax2.set_xlabel('x')
+                        ax2.set_ylabel('y')
+
+                        plt.suptitle(thetitle)
                         plt.show()
 
 
+                        # Do the optimization
+
+                        if optimize_flag:
+
+                            thetitle = "OPTIMIZATION "+title + " : circle  id={} :: fit (x0,y0) = ({},{}) saturation = {}, ".format(
+                                idx0, x0, y0, saturation_flag)
+
+
+                            f_arr = interpolate.interp2d(xgrid, ygrid, cropped_image, kind='linear')
+                            bounds = [(x0-w, x0+w+1), (y0-w, y0+w+1)]
+                            results = dict()
+
+                            if not saturation_flag:
+                                def function_opt(x):
+                                    return f_arr(x[0],x[1])[0]
+                            else:
+                                def function_opt(x):
+                                    return - f_arr(x[0],x[1])[0]
+
+                            # try several optimizers lile those described in
+                            # https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html
+                            # these optimisers search for function minima
+                            #- SHGO: simplicial homology global optimization
+                            # - DA: dual_annealing
+                            # - DE: differential_evolution
+                            # - BH: basinhopping
+                            # - SHGO_SOBOL: shgo has a second method, which returns all local minima rather than only what it thinks is the global minimum:
+
+                            results['shgo'] = optimize.shgo(function_opt, bounds)
+                            results['DA'] = optimize.dual_annealing(function_opt, bounds)
+                            results['DE'] = optimize.differential_evolution(function_opt, bounds)
+                            results['BH'] = optimize.basinhopping(function_opt, bounds)
+                            results['shgo_sobol'] = optimize.shgo(function_opt, bounds, n=200, iters=5,sampling_method='sobol')
+
+                            print("OPTIMIZATION SHGO         :: ",results['shgo'])
+                            print("OPTIMIZATION DA           :: ",results['DA'])
+                            print("OPTIMIZATION DE           :: ",results['DE'])
+                            print("OPTIMIZATION BH           :: ",results['BH'])
+                            print("OPTIMIZATION SHGO-SOBOL   :: ",results['shgo_sobol'])
+
+                            fig = plt.figure(figsize=(10, 8))
+                            ax = fig.add_subplot(111)
+
+                            if not saturation_flag:
+                                thearr =cropped_image
+                            else:
+                                thearr = -cropped_image
+
+                            #im = ax.imshow(thearr, interpolation='bilinear', origin='lower', extent=extent, cmap='gray')
+                            im = ax.imshow(thearr, origin='lower', extent=extent, cmap='gray')
+
+                            ax.plot([x0 - w, x0 + w + 1], [y0, y0], "k-")
+                            ax.plot([x0, x0], [y0 - w, y0 + w + 1], "k-")
+
+                            ax.set_xlabel('x')
+                            ax.set_ylabel('y')
+
+                            def plot_point(res, marker='o', color=None, ms=20, label=" "):
+                                ax.plot(res.x[0], res.x[1], marker=marker, color=color, ms=ms, label=label)
+
+                            plot_point(results['BH'], color='yellow', label="BH")  # basinhopping           - yellow
+                            plot_point(results['DE'], color='cyan', label="DE")  # differential_evolution - cyan
+                            plot_point(results['DA'], color='green', label="DA")  # dual_annealing.        - white
+
+                            # SHGO produces multiple minima, plot them all (with a smaller marker size)
+                            plot_point(results['shgo'], color='r', marker='+', ms=20, label="SHGO")
+                            plot_point(results['shgo_sobol'], color='r', marker='x', ms=20, label="SHGO_SOBOL")
+                            for i in range(results['shgo_sobol'].xl.shape[0]):
+                                if i == 0:
+                                    ax.plot(results['shgo_sobol'].xl[i, 0], results['shgo_sobol'].xl[i, 1], 'ro', ms=10,
+                                            label="SHGO_SOBOL")
+                                else:
+                                    ax.plot(results['shgo_sobol'].xl[i, 0], results['shgo_sobol'].xl[i, 1], 'ro', ms=10)
+
+                            ax.set_xlim(x0-w, x0+w+1)
+                            ax.set_ylim(y0-w, y0+w+1)
+                            ax.legend(loc="upper right")
+                            ax.grid()
+                            plt.title(thetitle)
+                            plt.colorbar(im)
+                            plt.show()
 
 
 
-            index+=1
+                        # end of optimization
+
+
+
+
+
+            index+=1  # increase circle counter
         # end loop
