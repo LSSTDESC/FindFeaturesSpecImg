@@ -119,17 +119,19 @@ class FeatureImage(object):
         self.numberoflines  = np.array([], dtype=int)        # number of segments crossing the circles
         self.numberofpoints = np.array([], dtype=int)        # number of points from extrapolated lines
         self.flag_validated_circles = np.array([], dtype=bool)     # number of validated circle
+        self.flag_saturation_circles = np.array([], dtype=bool)
 
         self.circlesummary        = Table(names=('index', 'x0', 'y0' ,"r0"), dtype=('i4', 'i4','i4','i4'))
 
         self.my_logger.info(f'\n\t Create FeatureImage')
 
-    # ---------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------------------------
     def find_lines(self):
         """
         FeatureImage::find_lines()
         :return:
         """
+        #-----------------------------------------------------------------------------------------------------------
         self.my_logger.info(f'\n\t probabilistic Hough Line search')
 
         all_lines = probabilistic_hough_line(self.img, threshold=parameters.LINE_THRESHOLD, line_length=parameters.LINE_LENGTH,
@@ -157,7 +159,7 @@ class FeatureImage(object):
 
         self.my_logger.info(f'\n\tNumber of Hough lines  {nblines} found')
 
-    #--------------------------------------
+    #-------------------------------------------------------------------------------------------------------------------
     def plot_lines(self,img=None, ax=None, scale="lin", title="", units="Image units", plot_stats=False,
                    figsize=[7.5, 7], aspect=None, vmin=None, vmax=None,
                    cmap="jet", cax=None, linecolor="magenta",linewidth=0.5):
@@ -178,6 +180,7 @@ class FeatureImage(object):
         :param cax:
         :return:
         """
+        #-------------------------------------------------------------------------------------------------------------
 
         self.my_logger.info(f'\n\t plot lines')
 
@@ -208,18 +211,29 @@ class FeatureImage(object):
 
 
 
-    #-----------------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------------------------------------------
 
-    def erase_lines(self):
+    def erase_lines(self,img=None):
         """
-         FeatureImage::erase_lines()
+        FeatureImage::erase_lines(img)
 
-         Erase line before applying Hough Circle algorithm
+         Erase lines in the image
+         If img=None Erase line in canny edge before applying Hough Circle algorithm
 
-
-        :return:
+        :param img : input image on which to erase the lines. If not provided None, the lines are erased in the canny edge
+        :return:   : image on which the line erase has been done
         """
+        #---------------------------------------------------------------------------------------------------------------
+
         self.my_logger.info(f'\n\t erase lines')
+
+        # if img==None:
+        if isinstance(img, np.ndarray):
+            data = img
+            title = "Erase lines in the provided image"
+        else:
+            data = self.img
+            title = "Erased lines in canny image"
 
         X = np.arange(0, self.img.shape[1])
         Y = np.arange(0, self.img.shape[0])
@@ -249,7 +263,8 @@ class FeatureImage(object):
             #    plt.imshow(newimg,origin="lower",cmap="gray")
             #    plt.show()
 
-            self.img[selected_elements]=0.0
+            #self.img[selected_elements]=0.0
+            data[selected_elements] = 0.0
 
             index+=1
         #end of loop on segment
@@ -257,15 +272,18 @@ class FeatureImage(object):
         plt.figure(figsize=(7,7))
         ax = plt.gca()
 
-        plot_image_simple(ax, data=self.img, scale="lin", title="Erased lines in canny image",cmap="gray")
+        #plot_image_simple(ax, data=self.img, scale="lin", title="Erased lines in canny image",cmap="gray")
+        plot_image_simple(ax, data=data, scale="lin", title=title, cmap="gray")
 
         # plt.legend()
         if parameters.DISPLAY:
             plt.show()
 
+        return data
 
 
-    #-----------------------------------------------------------------------------------------
+
+    #--------------------------------------------------------------------------------------------------------------------
 
     def find_circles(self):
         """
@@ -274,6 +292,7 @@ class FeatureImage(object):
 
         :return:
         """
+        #-----------------------------------------------------------------------------------------------------------------
 
         self.my_logger.info(f'\n\t Hough circles search')
 
@@ -300,7 +319,7 @@ class FeatureImage(object):
         nbcircles=len(self.circles)
         self.my_logger.info(f'\n\tNumber of Hough circles  {nbcircles} found')
 
-    # ------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------------------------------
     def plot_circles(self, img=None, ax=None, scale="lin", title="", units="Image units", plot_stats=False,
                        figsize=[7.5, 7], aspect=None, vmin=None, vmax=None,
                        cmap="jet", cax=None, linecolor="magenta", linewidth=1):
@@ -321,6 +340,7 @@ class FeatureImage(object):
             :param cax:
             :return:
             """
+        #---------------------------------------------------------------------------------------------------------------
 
         self.my_logger.info(f'\n\t plot circles ')
 
@@ -357,7 +377,7 @@ class FeatureImage(object):
             plt.show()
 
 
-    #----------------------------------------------------------------
+    #--------------------------------------------------------------------------------------------------------------------
 
     def compute_signal_in_circles(self,img):
         """
@@ -366,6 +386,7 @@ class FeatureImage(object):
         :param img:  Compute the sum in the image
         :return:
         """
+        #------------------------------------------------------------------------------------------------------------------
 
         self.my_logger.info(f'\n\t compute signal in circles')
 
@@ -402,7 +423,7 @@ class FeatureImage(object):
 
         return self.signal
 
-    # --------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------------------------------------
     def compute_line_in_circles(self,img=None,ax=None, scale="log", title="Extrapolated lines", units="Image units", plot_stats=False,
                        figsize=[7.5, 7], aspect=None, vmin=None, vmax=None,
                        cmap="gray", cax=None, linecolor="magenta", linewidth=0.5):
@@ -413,7 +434,7 @@ class FeatureImage(object):
 
         :return:
         """
-
+        #----------------------------------------------------------------------------------------------------------------
         self.my_logger.info(f'\n\t compute line in circles ')
 
 
@@ -473,7 +494,7 @@ class FeatureImage(object):
 
         return self.numberoflines,self.numberofpoints
 
-    # --------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------------------------------------
     def flag_validate_circles(self):
         """
         FeatureImage::flag_validate_circles()
@@ -482,6 +503,7 @@ class FeatureImage(object):
 
         :return:
         """
+        #---------------------------------------------------------------------------------------------------------------
 
         self.my_logger.info(f'\n\t flag_validate circles')
 
@@ -890,6 +912,61 @@ class FeatureImage(object):
 
 
     #--------------------------------------------------------------------------------------------------------------------------
+    def test_incircle_saturation(self,img,title="original image",figsize=[8, 8],cmap="jet"):
+        """
+         FeatureImage::test_incircle_saturation(img)
+
+         Test if there is some saturation in the image
+
+        :param img:
+        :return:
+        """
+
+        self.my_logger.info(f'\n\t test if there is some saturation inside circle')
+
+        # reset
+        self.flag_saturation_circles = np.array([], dtype=bool)
+
+        # by default plot every circles
+        self.flag_saturation_circles = np.full(shape=len(self.circles), fill_value=True, dtype=np.bool)
+
+        w = int(parameters.VIGNETTE_SIZE / 2)
+
+        index = 0
+        # loop on circles
+        for circle in self.circles:
+            # if the validation of circles has proceed
+            if len(self.flag_validated_circles) > 0:
+                if self.flag_validated_circles[index]:
+                    y0 = int(circle.y_fit)
+                    x0 = int(circle.x_fit)
+                    idx0 = circle.index
+
+                    # additionnal constraint on circle (x,y fit had to be done)
+                    if x0 - w > 0 and y0 - w > 0:
+                        x = np.arange(x0 - w, x0 + w + 1)
+                        y = np.arange(y0 - w, y0 + w + 1)
+                        xgrid, ygrid = np.meshgrid(x, y)
+
+                        cropped_image = img[y0 - w:y0 + w + 1, x0 - w:x0 + w + 1]
+
+                        thetitle = title + " : Validated circle  id={} :: fitted (x0,y0) = ({},{}) , ".format(idx0, x0,
+                                                                                                              y0)
+
+                        fig = plt.figure(figsize=figsize)
+                        ax = fig.add_subplot(111, projection='3d')
+                        ax.view_init(45, -45)
+                        ax.plot_surface(xgrid, ygrid, cropped_image, cmap=cmap)
+                        ax.set_xlabel('x')
+                        ax.set_ylabel('y')
+                        plt.suptitle(thetitle)
+
+                        plt.show()
+
+            index += 1
+        # end loop
+
+    #-------------------------------------------------------------------------------------------------------
     def get_optimum_center(self,img, title="lambda_plus",figsize=[8, 8],cmap="terrain"):
         """
 
@@ -898,7 +975,7 @@ class FeatureImage(object):
         """
 
         self.my_logger.info(f'\n\t optimize centering')
-        print("validated circles flags : ", self.flag_validated_circles)
+
 
         w = int(parameters.VIGNETTE_SIZE / 2)
 
