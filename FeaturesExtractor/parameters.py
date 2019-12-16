@@ -32,9 +32,9 @@ class IndexImg(IntEnum):
 NBIMG                  = 10
 
 # plag to select which image to plot
-FLAG_PLOT_IMG                 = False
-FLAG_PLOT_LAMBDA_PLUS         = False
-FLAG_PLOT_LAMBDA_MINUS        = False
+FLAG_PLOT_IMG                 = True
+FLAG_PLOT_LAMBDA_PLUS         = True
+FLAG_PLOT_LAMBDA_MINUS        = True
 FLAG_PLOT_LAMBDA_THETA        = False
 FLAG_PLOT_IMG_CLIP            = False
 FLAG_PLOT_LAMBDA_PLUS_CLIP    = False
