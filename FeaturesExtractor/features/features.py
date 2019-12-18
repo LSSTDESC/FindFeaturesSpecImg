@@ -51,14 +51,15 @@ class FeatureLine(object):
 
         self.angle          = 0           # angle of segment in degree
 
-        self.flag           = False       # this segment will be validated if it is in a validated circle
-        self.nbcircles      = 0           # number of circles associated to that line
-        self.nbpixincircles = 0           # number of pixels from the extrapolated line in the circle
+        self.flag                = False       # this segment will be validated if it is in a validated circle
+        self.aigrette_flag       = False       # criteria to sy if the segment is considered as an aigrette
+        self.nbcircles           = 0           # number of circles associated to that line
+        self.nbpixincircles      = 0           # number of pixels from the extrapolated line in the circle
 
-        self.circlesindex   = np.array([], dtype=int)   # container of associated circle
+        self.circlesindex        = np.array([], dtype=int)   # container of associated circle
 
         if dx!= 0:
-            self.angle         = np.arctan(dy/dx)*180./np.pi   # angle of that segment
+            self.angle           = np.arctan(dy/dx)*180./np.pi   # angle of that segment
 
 
 
@@ -127,7 +128,39 @@ class FeatureImage(object):
 
         self.circlesummary        = Table(names=('index', 'x0', 'y0' ,"r0"), dtype=('i4', 'i4','i4','i4'))
 
+
         self.my_logger.info(f'\n\t Create FeatureImage')
+
+    #-----------------------------------------------------------------------------------------------------------------
+    def set_circles(self, circles,signal,numberoflines,numberofpoints,flag_validated_circles,flag_saturation_circles,circlesummary):
+        """
+
+        :param circles:
+        :param signal:
+        :param numberoflines:
+        :param numberofpoints:
+        :param flag_validated_circles:
+        :param flag_saturation_circles:
+        :return:
+        """
+        self.circles                       = circles
+        self.signal                        = signal
+        self.numberoflines                 = numberoflines
+        self.numberofpoints                = numberofpoints
+        self.flag_validated_circles        = flag_validated_circles
+        self.flag_saturation_circles       = flag_saturation_circles
+        self.circlesummary                 = circlesummary
+
+        # -----------------------------------------------------------------------------------------------------------------
+
+    def get_circles(self):
+        """
+
+        :return:
+        """
+
+        return self.circles, self.signal, self.numberoflines, self.numberofpoints,self.flag_validated_circles,self.flag_saturation_circles,self.circlesummary
+
 
     # ----------------------------------------------------------------------------------------------------------------
     def find_lines(self):
@@ -608,6 +641,44 @@ class FeatureImage(object):
                             line.circlesindex=np.append(line.circlesindex,circle.index)  # add in line object a reference to the circle
             index+=1 # increase
 
+    # ------------------------------------------------------------------------------------------------------------------
+    def flag_validate_aigrettelines(self):
+        """
+        FeatureImage::flag_validate_lines(self)
+
+        Function to validate if a segment is associated to a validated circle aigrette
+
+
+        :return:
+        """
+
+        self.my_logger.info(f'\n\t flag validate aigrettes lines')
+
+        index = 0
+        X = np.arange(0, self.Nx)
+
+        # loop on circles
+        for circle in self.circles:
+            # if the validation of circles has proceed
+            if len(self.flag_validated_circles) > 0:
+                if self.flag_validated_circles[index]:
+                    # loop on lines
+                    for line in self.lines:
+                        if line.flag: # select already validated lines
+                        # make a straight lines
+                            Z = np.polyfit([line.x1, line.x2], [line.y1, line.y2], 1)
+                            pol = np.poly1d(Z)
+                            Y = pol(X)
+                            ######################################
+                            # need to implement critera of aigret
+                            #######################################
+                            theindexes = np.where((X - circle.x0) ** 2 + (Y - circle.y0) ** 2 < circle.r0 ** 2)[0]
+                            if len(theindexes) > 0:
+                                line.aigrette_flag = True
+                                line.nbcircles += 1
+
+            index += 1  # increase circle index
+
     #------------------------------------------------------------------------------------------------------------------------
     def plot_validated_lines(self,img=None,ax=None, scale="log", title="Validated lines", units="Image units", plot_stats=False,
                        figsize=[7.5, 7], aspect=None, vmin=None, vmax=None,
@@ -677,6 +748,76 @@ class FeatureImage(object):
 
 
 
+
+        plt.show()
+
+        # ------------------------------------------------------------------------------------------------------------------------
+
+    def plot_notvalidated_lines(self, img=None, ax=None, scale="log", title="NOT Validated lines", units="Image units",
+                             plot_stats=False,
+                             figsize=[7.5, 7], aspect=None, vmin=None, vmax=None,
+                             cmap="gray", cax=None, linecolor="magenta", linewidth=0.5):
+        """
+
+        :param mg:
+        :param ax:
+        :param scale:
+        :param title:
+        :param units:
+        :param plot_stats:
+        :param figsize:
+        :param aspect:
+        :param vmin:
+        :param vmax:
+        :param cmap:
+        :param cax:
+        :param linecolor:
+        :param linewidth:
+        :return:
+        """
+
+        self.my_logger.info(f'\n\t plot NOT validated lines ')
+
+        # mycol=["r","b","g","m","orange","y","c", "r","b","g","m","orange","y","c"]
+
+        # discretized_jet = cmap_discretize(matplotlib.cm.jet, len(self.circles))
+
+        # wavelength bin colors
+        jet = plt.get_cmap('jet')
+        cNorm = mpl.colors.Normalize(vmin=0, vmax=len(self.circles))
+        scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
+        all_colors = scalarMap.to_rgba(np.arange(len(self.circles)), alpha=1)
+
+        if isinstance(img, np.ndarray):
+            data = img
+        else:
+            data = self.img
+
+        if ax is None:
+            plt.figure(figsize=figsize)
+            ax = plt.gca()
+
+        plot_image_simple(ax, data=data, scale=scale, title=title, units=units, cax=cax, aspect=aspect, vmin=vmin,
+                          vmax=vmax, cmap=cmap)
+
+        # loop on lines
+        for segm in self.lines:
+            if not segm.flag:
+                # col=mycol[segm.circlesindex[0]]
+                col = all_colors[segm.circlesindex[0]]
+                ax.plot([segm.x1, segm.x2], [segm.y1, segm.y2], color=col, lw=linewidth)
+
+        # loop on circles
+        idx = 0
+        for circle in self.circles:
+            if self.flag_validated_circles[idx]:
+                # col = mycol[idx]
+                col = all_colors[idx]
+                thecircle = Circle((circle.x0, circle.y0), circle.r0, color=col, fill=False, lw=2)
+
+                ax.add_patch(thecircle)
+
+            idx += 1
 
         plt.show()
     #-----------------------------------------------------------------------------------------------
@@ -1085,11 +1226,12 @@ class FeatureImage(object):
                             results['BH'] = optimize.basinhopping(function_opt, bounds)
                             results['shgo_sobol'] = optimize.shgo(function_opt, bounds, n=200, iters=5,sampling_method='sobol')
 
-                            print("OPTIMIZATION SHGO         :: ",results['shgo'])
-                            print("OPTIMIZATION DA           :: ",results['DA'])
-                            print("OPTIMIZATION DE           :: ",results['DE'])
-                            print("OPTIMIZATION BH           :: ",results['BH'])
-                            print("OPTIMIZATION SHGO-SOBOL   :: ",results['shgo_sobol'])
+                            if parameters.DEBUG:
+                                print("OPTIMIZATION SHGO         :: ",results['shgo'])
+                                print("OPTIMIZATION DA           :: ",results['DA'])
+                                print("OPTIMIZATION DE           :: ",results['DE'])
+                                print("OPTIMIZATION BH           :: ",results['BH'])
+                                print("OPTIMIZATION SHGO-SOBOL   :: ",results['shgo_sobol'])
 
                             fig = plt.figure(figsize=(10, 8))
                             ax = fig.add_subplot(111)

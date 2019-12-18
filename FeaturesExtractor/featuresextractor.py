@@ -164,8 +164,9 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
 
     # optimization for minimum
     # --------------------------
-    image_features_lambdaplus.get_optimum_center(image.img_cube[parameters.IndexImg.lambda_plus],title="lambda_plus",cmap="jet")
-    image_features_lambdaplus.get_optimum_center(image.img_cube[parameters.IndexImg.lambda_minus],title="lambda_minus",cmap="jet",optimize_flag=True)
+    if parameters.FLAG_OPTIMISE:
+        image_features_lambdaplus.get_optimum_center(image.img_cube[parameters.IndexImg.lambda_plus],title="lambda_plus",cmap="jet")
+        image_features_lambdaplus.get_optimum_center(image.img_cube[parameters.IndexImg.lambda_minus],title="lambda_minus",cmap="jet",optimize_flag=True)
 
 
 
@@ -183,40 +184,48 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
 
     # ---------------------------- lambda_minus
     # work on lambda_minus
-    #image_features_lambdaminus = FeatureImage(image.img_cube[parameters.IndexImg.lambda_minus_edges])
+    # ---------------------
+
+
+
+    image_features_lambdaminus = FeatureImage(image.img_cube[parameters.IndexImg.lambda_minus_edges])
 
     # detect lines in lambda_plus
-    #image_features_lambdaminus.find_lines()
-    #image_features_lambdaplus.plot_lines(image.img_cube[parameters.IndexImg.lambda_minus], scale="log", cmap=plt.cm.gray,
-    #                                     title="Hough Lines detected in lambda_minus edges")
+    # ----------------------------
+    image_features_lambdaminus.find_lines()
+    image_features_lambdaminus.plot_lines(image.img_cube[parameters.IndexImg.lambda_minus], scale="log", cmap=plt.cm.gray,
+                                         title="Hough Lines detected in lambda_minus edges")
 
-    # detect circles
-    #image_features_lambdaminus.find_circles()
-    #image_features_lambdaminus.plot_circles(image.img_cube[parameters.IndexImg.img], scale="log", cmap=plt.cm.gray,
-    #                                       title="Hough circles detected in lambda_minus edges")
 
-    # signal sum in circles
-    #thesignalsum = image_features_lambdaminus.compute_signal_in_circles(image.img_cube[parameters.IndexImg.img])
 
-    #print("LAMBDA_MINUS::SIGNALSUM = ", thesignalsum)
 
-    # circle crossing
-    #NumberOfCrossings, NumberOfPixels = image_features_lambdaminus.compute_line_in_circles()
 
-    #print("LAMBDA_MINUS::NUMBEROFCROSSING = ", NumberOfCrossings)
-    #print("LAMBDA_MINUS::NUMBEROFPIXEL    = ", NumberOfPixels)
 
-    # Validate circles to be used
-    #image_features_lambdaminus.flag_validate_circles()
-    # Validate line segments
-    #image_features_lambdaminus.flag_validate_lines()
 
-    # plot
-    #image_features_lambdaminus.plot_circles(image.img_cube[parameters.IndexImg.lambda_minus], scale="log", cmap=plt.cm.gray,
-    #                                      title="Hough circles detected-validated in lambda_minus edges")
 
-    # circle profile
-    #image_features_lambdaplus.plot_circles_profiles(image.img_cube[parameters.IndexImg.lambda_minus])
+    # copy circles in lambda_plus into lambda_minus (bad search of circles in lambda_minus)
+    #--------------------------------------------------------------------------------------
+    circles,signal,numberoflines,numberofpoints,flag_validated_circles,flag_saturation_circles,circlesummary = image_features_lambdaplus.get_circles()
+
+    image_features_lambdaminus.set_circles(circles,signal,numberoflines,numberofpoints,flag_validated_circles,flag_saturation_circles,circlesummary)
+
+    # Show circles from lambda_plus into lambda_minus
+    # --------------------------------------------------------
+    image_features_lambdaminus.plot_circles(image.img_cube[parameters.IndexImg.img], scale="log",cmap=plt.cm.gray,
+                                         title="Hough circles shown in lambda_minus (found in lambda_plus edges)")
+
+
+
+    # Validate line segments : only segment which extrapolation intersect validated circles are validated
+    # ----------------------------------------------------------------------------------------------------
+    image_features_lambdaminus.flag_validate_lines()
+
+
+    # check validated line segments
+    # -------------------------------
+    image_features_lambdaminus.plot_validated_lines(img=image.img_cube[parameters.IndexImg.lambda_minus])
+    #image_features_lambdaminus.plot_notvalidated_lines(img=image.img_cube[parameters.IndexImg.lambda_minus])
+
 
 
 

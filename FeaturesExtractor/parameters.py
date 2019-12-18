@@ -31,7 +31,7 @@ class IndexImg(IntEnum):
 # number of images
 NBIMG                  = 10
 
-# plag to select which image to plot
+# Flag to select which image to plot
 FLAG_PLOT_IMG                 = True
 FLAG_PLOT_LAMBDA_PLUS         = True
 FLAG_PLOT_LAMBDA_MINUS        = True
@@ -43,7 +43,8 @@ FLAG_PLOT_THETA_CLIP          = False
 FLAG_PLOT_LAMBDA_PLUS_EDGES   = True
 FLAG_PLOT_LAMBDA_MINUS_EDGES  = True
 
-
+# Flags for steering
+FLAG_OPTIMISE                 = True
 
 #-----------------------------------------------------------------------
 # Quantile to clip the image
@@ -109,6 +110,12 @@ SATURATION_FRACTION_THRESHOLD   = 0.20          # fraction of the number of pixe
 # Optimisation to find the global minimum
 #-----------------------------------------------------------------------
 VIGNETTE_SIZE           = 16   # must be even
+
+
+#-----------------------------------------------------------------------
+# Search for aigrettes
+#-----------------------------------------------------------------------
+DISTANCE_CIRCLE_AIGRET_MAX     = 200            # max distance between segment aigret
 
 
 #-------------------------------------------------------------------------
