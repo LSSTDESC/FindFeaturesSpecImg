@@ -520,10 +520,20 @@ class FeatureImage(object):
 
         # Step One : Erase irrelevant circles
         if len(self.numberoflines) > 0 and len(self.numberofpoints) > 0:
-            erase_index1 = np.where(np.logical_or(self.numberofpoints == 0, self.numberoflines == 0))[0]
-            erase_index2 = np.where(self.signal < parameters.CIRCLE_SIGNAL_THRESHOLD)[0]
+            erase_index1_set = np.where(np.logical_or(self.numberofpoints == 0, self.numberoflines == 0))
+            if len(erase_index1_set) >0:
+                erase_index1=erase_index1_set[0]
+
+            print("parameters.CIRCLE_SIGNAL_THRESHOLD = ",parameters.CIRCLE_SIGNAL_THRESHOLD)
+
+            erase_index2_set= np.where(self.signal < parameters.CIRCLE_SIGNAL_THRESHOLD)
+            if len(erase_index2_set) >0:
+                erase_index2= erase_index2_set[0]
+
             erase_index = np.union1d(erase_index1, erase_index2)
-            self.flag_validated_circles[erase_index] = False
+
+            if len(erase_index)>0:
+                self.flag_validated_circles[erase_index] = False
 
 
 

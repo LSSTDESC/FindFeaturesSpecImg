@@ -45,6 +45,6 @@ if __name__ == "__main__":
     if len(rootname)>0 :
         output_directory=os.path.join(output_directory,rootname[0])
 
-    FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini')
+    FeatureExtractor(file_name, output_directory, config=config_name)
 
 

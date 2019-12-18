@@ -38,11 +38,19 @@ def load_config(config_filename):
                 value = str(value)
             setattr(parameters, options.upper(), value)
 
+
     # Derive other parameters
     parameters.MY_FORMAT = "%(asctime)-20s %(name)-10s %(funcName)-20s %(levelname)-6s %(message)s"
+
     logging.basicConfig(format=parameters.MY_FORMAT, level=logging.WARNING)
     mypath = os.path.dirname(__file__)
     # may overwrite parameters
+
+
+    #parameters.HOLO_DIR = os.path.join(mypath, parameters.HOLO_DIR)
+    #parameters.THROUGHPUT_DIR = os.path.join(mypath, parameters.THROUGHPUT_DIR)
+
+
 
     if parameters.VERBOSE:
         for section in config.sections():
@@ -54,6 +62,10 @@ def load_config(config_filename):
 
 
 #---------------------------------------------------------------------------------------------
+
+
+
+
 
 def set_logger(logger):
     """Logger function for all classes.
@@ -81,6 +93,9 @@ def set_logger(logger):
     >>> test.log()
     """
     my_logger = logging.getLogger(logger)
+
+
+
     if parameters.VERBOSE > 0:
         my_logger.setLevel(logging.INFO)
         coloredlogs.install(fmt=parameters.MY_FORMAT, level=logging.INFO)
