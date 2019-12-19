@@ -79,16 +79,23 @@ class FeatureCircle(object):
 
         self.my_logger = set_logger(self.__class__.__name__)
 
-        self.x0           = x
-        self.y0           = y
-        self.r0           = r
-        self.index        = index
+        self.x0             = x
+        self.y0             = y
+        self.r0             = r
+        self.index          = index
 
-        self.x_fit        = 0
-        self.y_fit        = 0
+        self.x_fit          = 0
+        self.y_fit          = 0
 
 
-        self.nbaigrettes = 0          # number of aigrettes
+        self.nbaigrettes    = 0          # number of aigrettes
+
+        self.x0_aigrette    = 0
+        self.y0_aigrette    = 0
+        self.sigx0_aigrette = 0
+        self.sigy0_aigrette = 0
+        self.covxy_aigrette = 0
+
 
 
     def distance(self,acircle):
@@ -296,14 +303,6 @@ class FeatureImage(object):
                 np.logical_and(YY >= dy/dx*(XX-x1)+y1-parameters.LINE_ERASE_MARGIN,
                                                         YY <= dy/dx*(XX-x1)+y1+parameters.LINE_ERASE_MARGIN))
 
-            #if(index==0):
-            #    newimg=np.zeros(self.img.shape,dtype=float)
-            #    newimg[selected_elements]=1
-            #    plt.figure(figsize=(5,5))
-            #    plt.imshow(newimg,origin="lower",cmap="gray")
-            #    plt.show()
-
-            #self.img[selected_elements]=0.0
             data[selected_elements] = 0.0
 
             index+=1
@@ -786,7 +785,7 @@ class FeatureImage(object):
     def plot_aigrettevalidated_lines(self, img=None, ax=None, scale="log", title="Aigrettes Validated lines", units="Image units",
                              plot_stats=False,
                              figsize=[7.5, 7], aspect=None, vmin=None, vmax=None,
-                             cmap="gray", cax=None, linecolor="magenta", linewidth=3):
+                             cmap="gray", cax=None, linecolor="magenta", linewidth=1):
         """
 
         :param mg:
@@ -853,11 +852,26 @@ class FeatureImage(object):
 
 
     #-----------------------------------------------------------------------------------------------
-    def compute_aigrettes_center(self):
+    def compute_aigrettes_center(self,img, title="original image",figsize=[8, 8],cmap="jet"):
         """
 
         :return:
         """
+
+        self.my_logger.info(f'\n\t compute aigrettes center ')
+
+        x0_table = np.zeros(len(self.circles))
+        sigx_table = np.zeros(len(self.circles))
+
+        y0_table = np.zeros(len(self.circles))
+        sigy_table = np.zeros(len(self.circles))
+
+        covxy_table = np.zeros(len(self.circles))
+
+
+
+        w = 100
+
         index = 0 # circle index
         # loop on circle
         for circle in self.circles:
@@ -866,13 +880,23 @@ class FeatureImage(object):
             X2 = []
             Y2 = []
             all_weight_circle = []
+
+
             if self.flag_validated_circles[index]:
+
+                # extract some info
+                yc = int(circle.y_fit)
+                xc = int(circle.x_fit)
+                idx = circle.index
+                saturation_flag = self.flag_saturation_circles[index]
+
+
 
                 # loop on line
                 for segm in self.lines:
                     if segm.flag:
                         if segm.circlesindex[0] == index and segm.length > 0 and segm.aigrette_flag:
-                            print("found aigrette for circle = ",index)
+
                             X1.append(segm.x1)
                             Y1.append(segm.y1)
                             X2.append(segm.x2)
@@ -887,7 +911,63 @@ class FeatureImage(object):
                 X0,Y0,sigX0,sigY0,covXY = fit_centralPoint(X1, X2, Y1, Y2, SIGMA=1)
 
 
-                print("X0 Y0", X0, " ", Y0)
+                print("X0 Y0 =  ( ", X0, " ", Y0, " ) , errors = ", sigX0, sigY0, covXY)
+
+                circle.x0_aigrette = X0
+                circle.y0_aigrette = Y0
+                circle.sigx0_aigrette = sigX0
+                circle.sigy0_aigrette = sigY0
+                circle.covxy_aigrette = covXY
+
+                x0_table[index] = X0
+                sigx_table[index]= sigX0
+
+                y0_table[index] = Y0
+                sigy_table[index] = sigY0
+
+                covxy_table[index] = covXY
+
+                # additionnal constraint on circle (x,y fit had to be done)
+                X0 = int(X0)
+                Y0 = int(Y0)
+                if X0 - w > 0 and Y0 - w > 0:
+                    x = np.arange(X0 - w, X0 + w + 1)
+                    y = np.arange(Y0 - w, Y0 + w + 1)
+                    xgrid, ygrid = np.meshgrid(x, y)
+
+                    cropped_image = img[Y0 - w:Y0 + w + 1, X0 - w:X0 + w + 1]
+                    extent = (X0 - w, X0 + w + 1, Y0 - w, Y0 + w + 1)
+
+                    thetitle = title + "  in circle  id={} :: fit (X0,Y0) = ({},{}) saturation = {}, ".format(idx, X0, Y0, saturation_flag)
+
+                    fig = plt.figure(figsize=figsize)
+
+                    ax2 = fig.add_subplot(111)
+                    ax2.imshow(cropped_image, origin="lower", extent=extent, cmap=cmap)
+                    ax2.plot([X0 - w, X0 + w + 1], [Y0, Y0], "k-")
+                    ax2.plot([X0, X0], [Y0 - w, Y0 + w + 1], "k-")
+                    ax2.set_xlabel('x')
+                    ax2.set_ylabel('y')
+                    ax2.grid()
+
+                    # loop on line
+                    for segm in self.lines:
+                        if segm.flag:
+                            if segm.circlesindex[0] == index and segm.length > 0 and segm.aigrette_flag:
+                                plt.plot([segm.x1,segm.x2],[segm.y1,segm.y2],"r-",lw=2)
+
+                                Z = np.polyfit([segm.x1, segm.x2], [segm.y1, segm.y2], 1)
+                                pol = np.poly1d(Z)
+                                yfit = pol(x)
+                                plt.plot(x,yfit, "r:",lw=0.5)
+
+
+                    plt.xlim(X0-w,X0+w)
+                    plt.ylim(Y0 - w, Y0 + w)
+                    plt.suptitle(thetitle)
+                    plt.show()
+
+
 
 
             index += 1  # loop on circles
@@ -900,6 +980,8 @@ class FeatureImage(object):
 
         :return:
         """
+
+        self.my_logger.info(f'\n\t compute theta ')
 
         theta_table = np.zeros(len(self.circles))
         err_theta_table = np.zeros(len(self.circles))

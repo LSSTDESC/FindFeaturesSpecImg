@@ -236,8 +236,8 @@ def fit_centralPoint(X1,X2,Y1,Y2,SIGMA=1):
     Y0=1/D*(sax*sc+sa*sby-sa*scx-sc*scy)
 
     # errors
-    sigX0 = 0.5/D*sb
-    sigY0 = 0.5*D * sa
+    sigX0 = 0.5/D * sb
+    sigY0 = 0.5/D * sa
     covXY = 0.5/D * sc
 
     return X0,Y0,sigX0,sigY0,covXY

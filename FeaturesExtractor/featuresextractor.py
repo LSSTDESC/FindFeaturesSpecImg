@@ -235,7 +235,8 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
 
     if flag_aigrettes_found:
         image_features_lambdaminus.plot_aigrettevalidated_lines(img=image.img_cube[parameters.IndexImg.lambda_minus])
-        image_features_lambdaminus.compute_aigrettes_center()
+        image_features_lambdaminus.compute_aigrettes_center(img=image.img_cube[parameters.IndexImg.lambda_plus],title= "fit aigret, showing lambda_plus",cmap=plt.cm.gray)
+        image_features_lambdaminus.compute_aigrettes_center(img=image.img_cube[parameters.IndexImg.lambda_minus],title="fit aigret, showing lambda_minus",cmap=plt.cm.gray)
 
 
 
