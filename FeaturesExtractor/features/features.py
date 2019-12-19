@@ -88,6 +88,9 @@ class FeatureCircle(object):
         self.y_fit        = 0
 
 
+        self.nbaigrettes = 0          # number of aigrettes
+
+
     def distance(self,acircle):
         return np.sqrt((acircle.x0-self.x0)**2 + (acircle.y0-self.y0)**2 )
 
@@ -119,14 +122,14 @@ class FeatureImage(object):
 
 
         # Hough Circle Detection to detect first approximately the position of the star (order 0)
-        self.circles        = []
-        self.signal         = np.array([], dtype=float)      # signal summed inside the circle
-        self.numberoflines  = np.array([], dtype=int)        # number of segments crossing the circles
-        self.numberofpoints = np.array([], dtype=int)        # number of points from extrapolated lines
-        self.flag_validated_circles = np.array([], dtype=bool)     # number of validated circle
-        self.flag_saturation_circles = np.array([], dtype=bool)
-
-        self.circlesummary        = Table(names=('index', 'x0', 'y0' ,"r0"), dtype=('i4', 'i4','i4','i4'))
+        self.circles                  = []
+        self.signal                   = np.array([], dtype=float)      # signal summed inside the circle
+        self.numberoflines            = np.array([], dtype=int)        # number of segments crossing the circles
+        self.numberofpoints           = np.array([], dtype=int)        # number of points from extrapolated lines
+        self.flag_validated_circles   = np.array([], dtype=bool)     # number of validated circle
+        self.flag_saturation_circles  = np.array([], dtype=bool)
+        self.flag_nbaigrettes_circles = np.array([], dtype=int)
+        self.circlesummary            = Table(names=('index', 'x0', 'y0' ,"r0"), dtype=('i4', 'i4','i4','i4'))
 
 
         self.my_logger.info(f'\n\t Create FeatureImage')
@@ -649,35 +652,62 @@ class FeatureImage(object):
         Function to validate if a segment is associated to a validated circle aigrette
 
 
-        :return:
+        :return: flag_aigrettes_found : if aigrettes were found
         """
 
         self.my_logger.info(f'\n\t flag validate aigrettes lines')
 
         index = 0
-        X = np.arange(0, self.Nx)
+
+        self.nbaigrettes = np.zeros(len(self.circles),dtype=int)  # initialize the counter of aigrettes
+        flag_aigrettes_found = False   # global flag to tell if aigrettes has been found
+
 
         # loop on circles
         for circle in self.circles:
+            nbaigrettes = 0
+
             # if the validation of circles has proceed
             if len(self.flag_validated_circles) > 0:
                 if self.flag_validated_circles[index]:
+
+                    y0          = circle.y0
+                    x0          = circle.x0
+                    r0          = circle.r0
+                    idx0        = circle.index
+
+
+
                     # loop on lines
                     for line in self.lines:
                         if line.flag: # select already validated lines
-                        # make a straight lines
-                            Z = np.polyfit([line.x1, line.x2], [line.y1, line.y2], 1)
-                            pol = np.poly1d(Z)
-                            Y = pol(X)
-                            ######################################
-                            # need to implement critera of aigret
-                            #######################################
-                            theindexes = np.where((X - circle.x0) ** 2 + (Y - circle.y0) ** 2 < circle.r0 ** 2)[0]
-                            if len(theindexes) > 0:
-                                line.aigrette_flag = True
-                                line.nbcircles += 1
+                        # compute distance between segement border and circle center
 
+                            dist1=np.sqrt( (line.x1-x0)**2 +(line.y1-y0)**2)
+                            dist2 = np.sqrt((line.x2 - x0) ** 2 + (line.y2 - y0) ** 2)
+                            distmin=min(dist1,dist2)
+
+                            # one of the two borders must be close enough from the circle center
+                            if distmin < parameters.DISTANCE_CIRCLE_AIGRET_MAX:
+                                line.aigrette_flag = True
+                                nbaigrettes       += 1
+
+
+            # do the following things if aigrettes are found
+            if nbaigrettes > 1:
+                flag_aigrettes_found=True
+                circle.nbaigrettes = nbaigrettes   # save in circle object the number of aigrettes
+                self.nbaigrettes[index] = nbaigrettes
             index += 1  # increase circle index
+
+        # copy the aigrettes numbers  in circle summary
+        self.circlesummary["aigrettes"] = self.nbaigrettes
+
+        if parameters.DEBUG:
+            print(self.circlesummary)
+
+
+        return flag_aigrettes_found
 
     #------------------------------------------------------------------------------------------------------------------------
     def plot_validated_lines(self,img=None,ax=None, scale="log", title="Validated lines", units="Image units", plot_stats=False,
@@ -753,7 +783,7 @@ class FeatureImage(object):
 
         # ------------------------------------------------------------------------------------------------------------------------
 
-    def plot_notvalidated_lines(self, img=None, ax=None, scale="log", title="NOT Validated lines", units="Image units",
+    def plot_aigrettevalidated_lines(self, img=None, ax=None, scale="log", title="Aigrettes Validated lines", units="Image units",
                              plot_stats=False,
                              figsize=[7.5, 7], aspect=None, vmin=None, vmax=None,
                              cmap="gray", cax=None, linecolor="magenta", linewidth=0.5):
@@ -776,7 +806,7 @@ class FeatureImage(object):
         :return:
         """
 
-        self.my_logger.info(f'\n\t plot NOT validated lines ')
+        self.my_logger.info(f'\n\t plot aigrettes validated lines ')
 
         # mycol=["r","b","g","m","orange","y","c", "r","b","g","m","orange","y","c"]
 
@@ -802,10 +832,10 @@ class FeatureImage(object):
 
         # loop on lines
         for segm in self.lines:
-            if not segm.flag:
-                # col=mycol[segm.circlesindex[0]]
+            if segm.flag:
                 col = all_colors[segm.circlesindex[0]]
-                ax.plot([segm.x1, segm.x2], [segm.y1, segm.y2], color=col, lw=linewidth)
+                if segm.aigrette_flag:
+                    ax.plot([segm.x1, segm.x2], [segm.y1, segm.y2], color=col, lw=linewidth)
 
         # loop on circles
         idx = 0

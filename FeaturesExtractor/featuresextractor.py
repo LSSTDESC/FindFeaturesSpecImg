@@ -224,7 +224,17 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
     # check validated line segments
     # -------------------------------
     image_features_lambdaminus.plot_validated_lines(img=image.img_cube[parameters.IndexImg.lambda_minus])
-    #image_features_lambdaminus.plot_notvalidated_lines(img=image.img_cube[parameters.IndexImg.lambda_minus])
+
+
+    # Search for aigrettes
+    #---------------------------
+    flag_aigrettes_found  = image_features_lambdaminus.flag_validate_aigrettelines()
+
+
+
+
+    if flag_aigrettes_found:
+        image_features_lambdaminus.plot_aigrettevalidated_lines(img=image.img_cube[parameters.IndexImg.lambda_minus])
 
 
 
