@@ -712,7 +712,7 @@ class FeatureImage(object):
     #------------------------------------------------------------------------------------------------------------------------
     def plot_validated_lines(self,img=None,ax=None, scale="log", title="Validated lines", units="Image units", plot_stats=False,
                        figsize=[7.5, 7], aspect=None, vmin=None, vmax=None,
-                       cmap="gray", cax=None, linecolor="magenta", linewidth=0.5):
+                       cmap="gray", cax=None, linecolor="magenta", linewidth=1.0):
         """
 
         :param mg:
@@ -770,7 +770,7 @@ class FeatureImage(object):
             if self.flag_validated_circles[idx]:
                 #col = mycol[idx]
                 col = all_colors[idx]
-                thecircle = Circle((circle.x0, circle.y0), circle.r0, color=col, fill=False, lw=2)
+                thecircle = Circle((circle.x0, circle.y0), circle.r0, color=col, fill=False, lw=linewidth)
 
                 ax.add_patch(thecircle)
 
@@ -786,7 +786,7 @@ class FeatureImage(object):
     def plot_aigrettevalidated_lines(self, img=None, ax=None, scale="log", title="Aigrettes Validated lines", units="Image units",
                              plot_stats=False,
                              figsize=[7.5, 7], aspect=None, vmin=None, vmax=None,
-                             cmap="gray", cax=None, linecolor="magenta", linewidth=0.5):
+                             cmap="gray", cax=None, linecolor="magenta", linewidth=3):
         """
 
         :param mg:
@@ -843,7 +843,7 @@ class FeatureImage(object):
             if self.flag_validated_circles[idx]:
                 # col = mycol[idx]
                 col = all_colors[idx]
-                thecircle = Circle((circle.x0, circle.y0), circle.r0, color=col, fill=False, lw=2)
+                thecircle = Circle((circle.x0, circle.y0), circle.r0, color=col, fill=False, lw=linewidth)
 
                 ax.add_patch(thecircle)
 

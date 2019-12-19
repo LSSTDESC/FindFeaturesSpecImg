@@ -171,3 +171,80 @@ def cmap_discretize(cmap, N):
     # Return colormap object.
     return matplotlib.colors.LinearSegmentedColormap(cmap.name + "_%d" % N, cdict, 1024)
 #----------------------------------------------------------------------------------------------------
+
+
+def fit_centralPoint(X1,X2,Y1,Y2,SIGMA=1):
+    """
+
+    fit_centralPoint(X1,X2,Y1,Y2)
+
+    find common intersection of all line segments defined by point (X1,Y1) , (X2,Y2)
+
+    :param X1: array of X1 coordinates
+    :param X2: array of X2 coordinates
+    :param Y1: array of Y1 coordinates
+    :param Y2: array of Y2 coordinates
+    :param SIGMA  : error on pixels
+    :return: x0,y0 : common center (and also errors)
+    """
+
+    N=len(X1)
+    W=np.sqrt((X2-X1)**2 +(Y2-Y1)**2)   # compute weights
+    X21=X2-X1
+    Y21=Y2-Y1
+    D21=np.sqrt(X21**2+Y21**2)
+    ALPHA=X21/D21
+    BETA=Y21/D21
+
+    A=(ALPHA*BETA)**2+BETA**4
+    B = (ALPHA * BETA)** 2 + ALPHA** 4
+    C=ALPHA*BETA**3+ALPHA**3*BETA
+
+
+    SA   = W/SIGMA**2*A
+    SAX  = W/SIGMA**2*A*X1
+    SAX2 = W / SIGMA ** 2 * A * X1**2
+
+    SB   = W / SIGMA ** 2 * B
+    SBY  = W / SIGMA ** 2 * B * Y1
+    SBY2 = W / SIGMA ** 2 * B * Y1 ** 2
+
+    SC   = W / SIGMA **2 * C
+    SCX  = W / SIGMA **2 * C * X1
+    SCY  = W / SIGMA ** 2 * C * Y1
+    SCXY = W / SIGMA ** 2 * C * X1 * Y1
+
+
+    sa   = np.sum(SA)
+    sax  = np.sum(SAX)
+    sax2 = np.sum(SAX2)
+
+    sb   = np.sum(SB)
+    sby  = np.sum(SBY)
+    sby2 = np.sum(SBY2)
+
+    sc   = np.sum(SC)
+    scx  = np.sum(SCX)
+    scy  = np.sum(SCY)
+    scxy = np.sum(SCXY)
+
+
+    D=sa*sb-sc**2
+
+    # fitted central position
+    X0=1/D*(sax*sb+sby*sc -sb*scy -sc*scx)
+    Y0=1/D*(sax*sc+sa*sby-sa*scx-sc*scy)
+
+    # errors
+    sigX0 = 0.5/D*sb
+    sigY0 = 0.5*D * sa
+    covXY = 0.5/D * sc
+
+    return X0,Y0,sigX0,sigY0,covXY
+
+#-----------------------------------------------------------------------------------------------
+
+
+
+
+

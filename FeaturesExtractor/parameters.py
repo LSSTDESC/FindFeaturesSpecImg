@@ -115,7 +115,7 @@ VIGNETTE_SIZE           = 16   # must be even
 #-----------------------------------------------------------------------
 # Search for aigrettes
 #-----------------------------------------------------------------------
-DISTANCE_CIRCLE_AIGRET_MAX     = 200            # max distance between segment aigret
+DISTANCE_CIRCLE_AIGRET_MAX     = 100            # max distance between segment aigret
 
 
 #-------------------------------------------------------------------------
