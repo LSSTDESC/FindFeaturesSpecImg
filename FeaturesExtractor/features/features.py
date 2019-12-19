@@ -909,9 +909,7 @@ class FeatureImage(object):
                 Y2 = np.array(Y2)
 
                 X0,Y0,sigX0,sigY0,covXY = fit_centralPoint(X1, X2, Y1, Y2, SIGMA=1)
-
-
-                print("X0 Y0 =  ( ", X0, " ", Y0, " ) , errors = ", sigX0, sigY0, covXY)
+                #print("X0 Y0 =  ( ", X0, " ", Y0, " ) , errors = ", sigX0, sigY0, covXY)
 
                 circle.x0_aigrette = X0
                 circle.y0_aigrette = Y0
@@ -972,7 +970,24 @@ class FeatureImage(object):
 
             index += 1  # loop on circles
 
+        self.circlesummary["x0_aigr"] = x0_table
+        self.circlesummary["y0_aigr"] = y0_table
 
+        self.circlesummary["sigx0_aigr"] = sigx_table
+        self.circlesummary["sigy0_aigr"] = sigy_table
+
+        self.circlesummary["covxy_aigr"] = covxy_table
+
+        self.circlesummary["x0_aigr"].format = "%3.2f"
+        self.circlesummary["y0_aigr"].format = "%3.2f"
+
+        self.circlesummary["sigx0_aigr"].format = "%1.3f"
+        self.circlesummary["sigy0_aigr"].format = "%1.3f"
+
+        self.circlesummary["covxy_aigr"].format = "%1.3f"
+
+        if parameters.DEBUG:
+            print(self.circlesummary)
 
     #-----------------------------------------------------------------------------------------------
     def compute_theta(self):
