@@ -850,6 +850,50 @@ class FeatureImage(object):
             idx += 1
 
         plt.show()
+
+
+    #-----------------------------------------------------------------------------------------------
+    def compute_aigrettes_center(self):
+        """
+
+        :return:
+        """
+        index = 0 # circle index
+        # loop on circle
+        for circle in self.circles:
+            X1 = []
+            Y1 = []
+            X2 = []
+            Y2 = []
+            all_weight_circle = []
+            if self.flag_validated_circles[index]:
+
+                # loop on line
+                for segm in self.lines:
+                    if segm.flag:
+                        if segm.circlesindex[0] == index and segm.length > 0 and segm.aigrette_flag:
+                            print("found aigrette for circle = ",index)
+                            X1.append(segm.x1)
+                            Y1.append(segm.y1)
+                            X2.append(segm.x2)
+                            Y2.append(segm.y2)
+
+            if len(X1) > parameters.MIN_NUMBER_AIGRET_SEGMENTS:
+                X1=np.array(X1)
+                X2 = np.array(X2)
+                Y1 = np.array(Y1)
+                Y2 = np.array(Y2)
+
+                X0,Y0,sigX0,sigY0,covXY = fit_centralPoint(X1, X2, Y1, Y2, SIGMA=1)
+
+
+                print("X0 Y0", X0, " ", Y0)
+
+
+            index += 1  # loop on circles
+
+
+
     #-----------------------------------------------------------------------------------------------
     def compute_theta(self):
         """

@@ -116,7 +116,7 @@ VIGNETTE_SIZE           = 16   # must be even
 # Search for aigrettes
 #-----------------------------------------------------------------------
 DISTANCE_CIRCLE_AIGRET_MAX     = 100            # max distance between segment aigret
-
+MIN_NUMBER_AIGRET_SEGMENTS     = 10             # minimum number of aigret segents
 
 #-------------------------------------------------------------------------
 # Save output table
