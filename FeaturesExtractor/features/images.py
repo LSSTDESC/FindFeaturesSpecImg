@@ -186,8 +186,8 @@ class Image(object):
         lambda_plus_cut = -np.where(lambda_plus < 0, lambda_plus, 0)
 
 
-        Nx=lambda_plus.shape[0]
-        Ny=lambda_plus.shape[1]
+        Nx=lambda_plus.shape[1]
+        Ny=lambda_plus.shape[0]
 
         self.my_logger.info(f'\n\tSize of original image (Nx,Ny) = ({self.Nx},{self.Ny})')
         self.my_logger.info(f'\n\tSize of processed image (Nx,Ny) = ({Nx},{Ny})')

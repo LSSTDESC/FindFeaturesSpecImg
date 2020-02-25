@@ -10,9 +10,10 @@ In particular it is proposed to feed **Spectractor** with the diffraction order 
 the orientation angle of its first 
 
 - author : Sylvie Dagoret-Campagne
-- affiliation : LAL/IN2P3/CNRS
+- affiliation : LAL/IN2P3/CNRS puis IJCLAB/IN2P3/CNRS
 - creation date : December 10 th 2019 
 - update : December 13 th 2019 
+- update : February 25th 2020
 
 
 
@@ -37,6 +38,12 @@ Spectractor is written in Python 3.7 It needs the numpy, skimage, astropy, modul
 in a shell, run the command :
 
 python runFeaturesExtractorSpecimg.py input_image_filename
+
+or
+
+python runFeaturesExtractorSpecimg.py -c config/testbench.ini tests/data/10_CCD1_20200206164429_red.fits 
+
+
 
 - **input**  : fit filename of the input image
 - **output** : an ascii file containing the position of the identified order 0 stars, plus some criteria
