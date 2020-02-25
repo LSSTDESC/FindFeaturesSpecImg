@@ -37,11 +37,13 @@ Spectractor is written in Python 3.7 It needs the numpy, skimage, astropy, modul
 
 in a shell, run the command :
 
+### For an Image taken at a telescope
 python runFeaturesExtractorSpecimg.py input_image_filename
 
 or
 
-python runFeaturesExtractorSpecimg.py -c config/opticalbench.ini tests/data/10_CCD1_20200206164429_red.fits 
+### For an Image taken from a lamp at optical testbench 
+python runFeaturesExtractorSpecLampimg.py  -c config/opticalbench.ini tests/data/10_CCD1_20200206164429_red.fits 
 
 
 - **input**  : fit filename of the input image
@@ -54,6 +56,22 @@ python runFeaturesExtractorSpecimg.py -c config/opticalbench.ini tests/data/10_C
    - 
    
 ## What it does ?
+   
+### Launcher 1 : start with lambda_plus
+
+- runFeaturesExtractorSpecimg.py : Original Image analyser
+
+#### It sequence is programmed in :
+
+- FeaturesExtractor/featuresextractor.py	
+
+### Launcher 2 : start with lambda_minus
+
+- runFeaturesExtractorSpecLampimg.py : Analyser developped for test bench
+   
+#### Its sequence is programmed in:
+
+- FeaturesExtractor/featuresextractor_lambdam.py
    
 ## Software organisation
 
