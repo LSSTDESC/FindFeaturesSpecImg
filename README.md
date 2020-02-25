@@ -41,8 +41,7 @@ python runFeaturesExtractorSpecimg.py input_image_filename
 
 or
 
-python runFeaturesExtractorSpecimg.py -c config/testbench.ini tests/data/10_CCD1_20200206164429_red.fits 
-
+python runFeaturesExtractorSpecimg.py -c config/opticalbench.ini tests/data/10_CCD1_20200206164429_red.fits 
 
 
 - **input**  : fit filename of the input image
