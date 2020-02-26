@@ -142,7 +142,7 @@ class FeatureImage(object):
         self.my_logger.info(f'\n\t Create FeatureImage')
 
         # specify the format of the table for float
-        self.linesummary['theta'].info.format = '3.2f'
+        self.linesummary['theta'].info.format = '4.6f'
 
     #-----------------------------------------------------------------------------------------------------------------
     def set_circles(self, circles,signal,numberoflines,numberofpoints,flag_validated_circles,flag_saturation_circles,circlesummary):
