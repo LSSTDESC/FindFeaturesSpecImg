@@ -52,7 +52,7 @@ class FeatureLine(object):
         self.angle          = 0           # angle of segment in degree
 
         self.flag                = False       # this segment will be validated if it is in a validated circle
-        self.aigrette_flag       = False       # criteria to sy if the segment is considered as an aigrette
+        self.aigrette_flag       = False       # criteria to say if the segment is considered as an aigrette
         self.nbcircles           = 0           # number of circles associated to that line
         self.nbpixincircles      = 0           # number of pixels from the extrapolated line in the circle
 
@@ -60,6 +60,7 @@ class FeatureLine(object):
 
         if dx!= 0:
             self.angle           = np.arctan(dy/dx)*180./np.pi   # angle of that segment
+
 
 
 
@@ -114,19 +115,19 @@ class FeatureImage(object):
     def __init__(self, img):
         """
 
-        :param img: Image used to find the feature (produced by canny edge detection)
+        :param img: Image used to find the feature after the img has been passed through canny edge detection)
         """
 
         self.my_logger = set_logger(self.__class__.__name__)
 
-        self.img           = img                              # base edge image on which circles and line are found
-        self.Nx            = self.img.shape[1]
-        self.Ny            = self.img.shape[0]
+        self.img                      = img                      # base edge image on which circles and line are found
+        self.Nx                       = self.img.shape[1]        # number of pixels along X
+        self.Ny                       = self.img.shape[0]        # number of pixels along Y
 
         # Probabilistic Hough Line Detection
         # These lines are supposed to be the track of the first order
-        self.lines         = []
-
+        self.lines                    = []                       # container for lines
+        self.linesummary              = Table(names=('index','length','theta','x1','y1','x2','y2'), dtype=('i4','i4','f8','i4','i4','i4','i4'))
 
         # Hough Circle Detection to detect first approximately the position of the star (order 0)
         self.circles                  = []
@@ -138,8 +139,10 @@ class FeatureImage(object):
         self.flag_nbaigrettes_circles = np.array([], dtype=int)
         self.circlesummary            = Table(names=('index', 'x0', 'y0' ,"r0"), dtype=('i4', 'i4','i4','i4'))
 
-
         self.my_logger.info(f'\n\t Create FeatureImage')
+
+        # specify the format of the table for float
+        self.linesummary['theta'].info.format = '3.2f'
 
     #-----------------------------------------------------------------------------------------------------------------
     def set_circles(self, circles,signal,numberoflines,numberofpoints,flag_validated_circles,flag_saturation_circles,circlesummary):
@@ -202,7 +205,17 @@ class FeatureImage(object):
                 self.lines.append (theline)
                 index+=1
 
+                summarylinecount = len(self.linesummary)  # extract the number of lines already entered
+                # save this new line in the line summary
+                self.linesummary.add_row((summarylinecount+1, int(theline.length), theline.angle, theline.x1, theline.y1,
+                                          theline.x2, theline.y2))
+
         nblines=len(self.lines)
+
+
+        if parameters.DEBUG:
+            print(self.linesummary)
+
 
         self.my_logger.info(f'\n\tNumber of Hough lines  {nblines} found')
 

@@ -110,47 +110,11 @@ def FeatureExtractor(file_name, output_directory, config='./config/picdumidi.ini
     image_features_lambdaminus.plot_lines(image.img_cube[parameters.IndexImg.lambda_minus], scale="log", cmap=plt.cm.gray,
                                          title="Hough Lines detected in lambda_minus edges")
 
+    # write surmmary table on circles
+    # -----------------------------------------
+    image_features_lambdaminus.linesummary.write(os.path.join(output_directory, parameters.FILENAME_LM_SUMMARYTABLE),
+                                                  format='ascii', overwrite=True)
 
-
-
-
-
-
-
-    # copy circles in lambda_plus into lambda_minus (bad search of circles in lambda_minus)
-    #--------------------------------------------------------------------------------------
-    circles,signal,numberoflines,numberofpoints,flag_validated_circles,flag_saturation_circles,circlesummary = image_features_lambdaplus.get_circles()
-
-    image_features_lambdaminus.set_circles(circles,signal,numberoflines,numberofpoints,flag_validated_circles,flag_saturation_circles,circlesummary)
-
-    # Show circles from lambda_plus into lambda_minus
-    # --------------------------------------------------------
-    image_features_lambdaminus.plot_circles(image.img_cube[parameters.IndexImg.img], scale="log",cmap=plt.cm.gray,
-                                         title="Hough circles shown in lambda_minus (found in lambda_plus edges)")
-
-
-
-    # Validate line segments : only segment which extrapolation intersect validated circles are validated
-    # ----------------------------------------------------------------------------------------------------
-    image_features_lambdaminus.flag_validate_lines()
-
-
-    # check validated line segments
-    # -------------------------------
-    image_features_lambdaminus.plot_validated_lines(img=image.img_cube[parameters.IndexImg.lambda_minus])
-
-
-    # Search for aigrettes
-    #---------------------------
-    flag_aigrettes_found  = image_features_lambdaminus.flag_validate_aigrettelines()
-
-
-
-
-    if flag_aigrettes_found:
-        image_features_lambdaminus.plot_aigrettevalidated_lines(img=image.img_cube[parameters.IndexImg.lambda_minus])
-        image_features_lambdaminus.compute_aigrettes_center(img=image.img_cube[parameters.IndexImg.lambda_plus],title= "fit aigret, showing lambda_plus",cmap=plt.cm.gray)
-        image_features_lambdaminus.compute_aigrettes_center(img=image.img_cube[parameters.IndexImg.lambda_minus],title="fit aigret, showing lambda_minus",cmap=plt.cm.gray)
 
 
 
